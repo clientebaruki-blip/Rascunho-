@@ -8408,5 +8408,127 @@ body.nat-on{padding-top:14px!important;padding-left:14px!important;padding-right
 })();
 </script>
 <!-- =================== FIM DAS LUZES DE NATAL BARUKI =================== -->
+
+<!-- BANNER DE RODAPÉ (abaixo da barra Cardápio / Meus pedidos / Carrinho / Configurações) -->
+<style id="baruki-rodape-banner-style">
+:root{--baruki-rodape-h:0px}
+#barukiRodapeBanner{position:fixed;left:0;right:0;bottom:0;z-index:101;display:none;background:#050505;overflow:hidden;line-height:0;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px);transform:translateY(100%);transition:transform 1.6s cubic-bezier(.22,.61,.36,1)}
+#barukiRodapeBanner.pronto{display:block}
+#barukiRodapeBanner.ativo{transform:translateY(0)}
+#barukiRodapeBanner img{display:block;width:100%;height:auto;max-height:22vh;object-fit:contain;margin:0 auto}
+nav.bottom{transition:transform 1.6s cubic-bezier(.22,.61,.36,1)}
+body.baruki-rodape-ativo nav.bottom{transform:translateY(calc(-1 * var(--baruki-rodape-h)))}
+#barukiRodapeEspaco{height:0;transition:height 1.6s cubic-bezier(.22,.61,.36,1);pointer-events:none}
+body.baruki-rodape-ativo #barukiRodapeEspaco{height:var(--baruki-rodape-h)}
+body.baruki-rodape-ativo .prep-timer-slot{bottom:calc(94px + var(--baruki-rodape-h) + env(safe-area-inset-bottom,0px))!important}
+body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
+@media(prefers-reduced-motion:reduce){#barukiRodapeBanner,nav.bottom,#barukiRodapeEspaco{transition:none}}
+</style>
+<div id="barukiRodapeEspaco" aria-hidden="true"></div>
+<div id="barukiRodapeBanner" aria-hidden="true"><img id="barukiRodapeBannerImg" alt="" decoding="async"></div>
+<script id="baruki-rodape-banner-script">
+/* Banner de rodapé: aparece automaticamente quando a loja está aberta (mesmo horário/status do cabeçalho),
+   só se houver imagem no link. Ao entrar, aparece por 10 segundos e depois some. */
+(function(){
+  const box=document.getElementById('barukiRodapeBanner');
+  const img=document.getElementById('barukiRodapeBannerImg');
+  if(!box||!img)return;
+  const LINK="https://www.socialcreator.com/srv/imgs/seccs/335147_ico.png?ts=1794150505";
+  const DURACAO=10000; // 10 segundos na tela
+  let visivel=false, busy=false, jaMostrou=false, eraAberta=null, objUrl=null, hideTimer=null, fimTimer=null;
+
+  // Mesma regra do cabeçalho da loja (status remoto tem prioridade; senão terça a sábado, 18:00 às 22:30).
+  function lojaAberta(){
+    try{if(typeof window.isOpen==='function')return !!window.isOpen();}catch(e){}
+    const d=new Date(),day=d.getDay(),m=d.getHours()*60+d.getMinutes();
+    return day>=2&&day<=6&&m>=1080&&m<1350;
+  }
+  function novoLink(){
+    const stamp=Date.now(), rnd=stamp+'_'+Math.random().toString(36).slice(2);
+    try{const u=new URL(LINK);u.searchParams.set('ts',String(stamp));u.searchParams.set('_baruki_rodape',rnd);return u.toString();}
+    catch(e){return LINK+(LINK.includes('?')?'&':'?')+'ts='+stamp+'&_baruki_rodape='+rnd;}
+  }
+  function carregar(src){
+    return new Promise((ok,no)=>{
+      const p=new Image();
+      p.onload=async()=>{try{if(p.decode)await p.decode();}catch(e){} p.naturalWidth>1?ok():no();};
+      p.onerror=no;
+      p.src=src;
+    });
+  }
+  async function ler(){
+    const url=novoLink();
+    try{
+      const r=await fetch(url,{cache:'no-store',mode:'cors'});
+      if(!r.ok)return null;
+      const blob=await r.blob();
+      if(!blob.type.startsWith('image/')||!blob.size)return null;
+      const obj=URL.createObjectURL(blob);
+      try{await carregar(obj);}catch(e){URL.revokeObjectURL(obj);return null;}
+      return {src:obj,obj:obj};
+    }catch(e){
+      // Servidor sem CORS: confere pela própria imagem.
+      try{await carregar(url);return {src:url,obj:null};}catch(e2){return null;}
+    }
+  }
+  function medir(){
+    document.documentElement.style.setProperty('--baruki-rodape-h',box.offsetHeight+'px');
+  }
+  function mostrar(){
+    clearTimeout(hideTimer);clearTimeout(fimTimer);
+    visivel=true;
+    box.classList.add('pronto');
+    box.setAttribute('aria-hidden','false');
+    medir();void box.offsetHeight;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      medir();
+      box.classList.add('ativo');
+      document.body.classList.add('baruki-rodape-ativo');
+    }));
+    fimTimer=setTimeout(esconder,DURACAO); // some depois de 10 segundos
+  }
+  function esconder(){
+    clearTimeout(fimTimer);
+    if(!visivel)return;
+    visivel=false;
+    box.classList.remove('ativo');
+    document.body.classList.remove('baruki-rodape-ativo');
+    clearTimeout(hideTimer);
+    hideTimer=setTimeout(()=>{
+      if(visivel)return;
+      box.classList.remove('pronto');
+      box.setAttribute('aria-hidden','true');
+      img.removeAttribute('src');
+      if(objUrl){URL.revokeObjectURL(objUrl);objUrl=null;}
+      document.documentElement.style.setProperty('--baruki-rodape-h','0px');
+    },1800);
+  }
+  async function ciclo(){
+    if(busy||document.hidden)return;
+    busy=true;
+    try{
+      const aberta=lojaAberta();
+      if(aberta&&eraAberta===false)jaMostrou=false; // loja acabou de abrir: libera nova exibição
+      eraAberta=aberta;
+      if(!aberta){esconder();return;}               // fora do horário: não aparece
+      if(jaMostrou)return;                          // já apareceu nesta visita
+      const r=await ler();
+      if(!r)return;                                 // sem imagem no link: segue normal
+      if(!lojaAberta())return;                      // fechou durante a verificação
+      const antigo=objUrl;
+      img.src=r.src;
+      try{if(img.decode)await img.decode();}catch(e){}
+      objUrl=r.obj;
+      if(antigo&&antigo!==r.obj)URL.revokeObjectURL(antigo);
+      jaMostrou=true;
+      mostrar();
+    }catch(e){}finally{busy=false;}
+  }
+  window.addEventListener('resize',()=>{if(visivel)medir();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)ciclo();});
+  ciclo();
+  setInterval(ciclo,5000);
+})();
+</script>
 </body>
 </html>
