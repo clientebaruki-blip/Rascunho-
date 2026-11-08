@@ -250,6 +250,7 @@ body{padding-bottom:88px}
 .address-box label{display:block;font-size:12px;font-weight:900;margin-bottom:6px;color:#ddd}
 .address-box input{width:100%;padding:11px;border-radius:10px;border:1px solid #444;background:#242424;color:#fff;outline:none}
 .address-box input:focus{border-color:var(--primary)}
+#pickupTimeFields select:focus{border-color:var(--orange);outline:0}
 
 
 
@@ -977,11 +978,7 @@ body:not(.day-theme) .order-message{
 @keyframes prepTimerGlow{0%,100%{box-shadow:0 8px 22px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.08),0 0 12px rgba(0,200,83,.06)}50%{box-shadow:0 10px 25px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.10),0 0 24px rgba(0,200,83,.18)}}
 @media(max-width:600px){.prep-timer-slot{min-width:72px}.prep-timer{width:88px;min-height:61px;padding:7px 6px}.prep-timer-time{font-size:20px}.prep-timer-label{font-size:8px;letter-spacing:.7px}.prep-timer-sub{font-size:7px}}
 @media(max-width:420px){.prep-timer-slot{min-width:64px}.prep-timer{width:82px;min-height:58px;border-radius:13px}.prep-timer-time{font-size:18px}.prep-timer-label{font-size:7px}}
-/* Contagem regressiva para o fechamento: aparece somente nos 40 minutos finais */
-.closing-countdown{display:none;align-items:center;justify-content:center;gap:5px;margin-top:2px;padding:4px 9px;border:1px solid rgba(255,193,7,.32);border-radius:999px;background:rgba(255,193,7,.07);color:#ffd54a;font-size:10px;font-weight:950;letter-spacing:.35px;line-height:1;text-shadow:0 0 8px rgba(255,193,7,.35);animation:closingCountdownPulse 1.5s ease-in-out infinite}
-.closing-countdown.show{display:inline-flex}
-@keyframes closingCountdownPulse{0%,100%{opacity:.82;box-shadow:0 0 0 rgba(255,193,7,0)}50%{opacity:1;box-shadow:0 0 12px rgba(255,193,7,.12)}}
-@media(max-width:420px){.closing-countdown{font-size:9px;padding:4px 7px}}
+
 </style>
 
 <style id="baruki-info-help">
@@ -1872,7 +1869,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 </style>
 <style id="baruki-ajuste-corte-categoria">
 /* Dá espaço vertical para o card selecionado sem alterar seu tamanho ou imagem. */
-#categories{padding-top:8px!important;padding-bottom:24px!important;}
+#categories{padding-top:8px!important;padding-bottom:24px!important;margin-bottom:0!important;}
 #categories .cat{box-sizing:border-box!important;}
 #categories .cat:active{transform:none!important;}
 </style>
@@ -1884,19 +1881,19 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   <div class="brand">LANCHONETE <span>BARUKI</span></div>
   <div class="sub"><span class="order-message"><span class="order-pulse">📲</span> <span class="order-line">FAÇA SEU PEDIDO COM <strong>RAPIDEZ!</strong></span><span class="order-line order-whatsapp">Envie diretamente para o <strong>WhatsApp</strong> <span class="order-pulse">💬</span></span></span></div>
   <div class="status" aria-live="polite">
-  <div class="status-line"><span id="statusDot" class="dot"></span><span id="statusText">VERIFICANDO...</span><span id="closingCountdown" class="closing-countdown" aria-live="polite"></span><span id="attendingMessage" class="attending-message" aria-hidden="true">ESTAMOS ATENDENDO</span></div>
+  <div class="status-line"><span id="statusDot" class="dot"></span><span id="statusText">VERIFICANDO...</span><span id="attendingMessage" class="attending-message" aria-hidden="true">ESTAMOS ATENDENDO</span></div>
 </div>
 </header>
 
 
 <section class="baruki-banner-wrap" aria-label="Banners da Lanchonete Baruki">
   <div class="baruki-banner" id="barukiBanner">
-    <div class="baruki-banner-track" id="barukiBannerTrack">    <button class="baruki-banner-arrow prev" type="button" aria-label="Banner anterior" onclick="moveBarukiBanner(-1)">‹</button>
-    <button class="baruki-banner-arrow next" type="button" aria-label="Próximo banner" onclick="moveBarukiBanner(1)">›</button>
+    <div class="baruki-banner-track" id="barukiBannerTrack"></div>
+    <button class="baruki-banner-arrow prev" type="button" aria-label="Banner anterior" style="display:none" onclick="moveBarukiBanner(-1)">‹</button>
+    <button class="baruki-banner-arrow next" type="button" aria-label="Próximo banner" style="display:none" onclick="moveBarukiBanner(1)">›</button>
   </div>
   <div class="baruki-banner-info" aria-label="Horário de funcionamento da Lanchonete Baruki">
     <div class="baruki-banner-hours"><span class="clock-icon" aria-hidden="true">🕒</span><span>TERÇA A SÁBADO · 18:00 ÀS 22:30</span></div>
-    <div id="bannerClosingAlert" class="baruki-banner-alert" aria-live="polite"><span aria-hidden="true">⚠️</span><span>FALTAM</span><span id="bannerClosingTime" class="alert-time">40:00</span><span>PARA FECHAR!</span></div>
   </div>
   <div class="baruki-banner-dots" id="barukiBannerDots" aria-label="Selecionar banner"></div>
 </section>
@@ -2069,9 +2066,16 @@ body.day-theme #mensagemBiblicaDiaria .mbd-data{color:#666}
   <h2>Finalizar pedido</h2>
   <div class="notice">Confira os dados e o valor antes de enviar.</div>
 
-  <div class="formgroup"><label>Nome (opcional)</label><input id="clientName" type="text" placeholder="Seu nome" autocomplete="name"><label class="option" style="margin-top:8px"><input type="checkbox" id="v2SaveCustomerName"> Salvar meu nome neste aparelho (opcional)</label></div>
+  <div class="formgroup"><label>Nome</label><input id="clientName" type="text" placeholder="Seu nome" autocomplete="name"><label class="option" style="margin-top:8px"><input type="checkbox" id="v2SaveCustomerName"> Salvar meu nome neste aparelho (opcional)</label></div>
   <div class="section">
     <label class="option"><input type="radio" name="delivery" value="Balcão" data-price="0" onchange="delivery(this)"> Retirada no balcão</label>
+  </div>
+  <div id="pickupTimeFields" class="formgroup" style="display:none">
+    <label for="pickupTime">Horário para retirada</label>
+    <select id="pickupTime" onchange="updateCheckout()" style="width:100%;padding:12px;border:1px solid #484848;border-radius:10px;background:#151515;color:#fff">
+      <option value="">Selecione o horário</option>
+    </select>
+    <small id="pickupTimeDays" style="display:block;margin-top:6px;color:#aaa">Disponível de terça a sábado, das 18:00 às 22:30.</small>
   </div>
 
   <div class="section">
@@ -3739,7 +3743,7 @@ function saveSentOrder(message,total){
     customer:document.getElementById('clientName')?.value.trim()||'',
     address:document.getElementById('address')?.value.trim()||'',
     number:document.getElementById('addressNumber')?.value.trim()||'',
-    delivery:selectedDelivery?{name:selectedDelivery.name,price:Number(selectedDelivery.price)||0}:null,
+    delivery:selectedDelivery?{name:selectedDelivery.name,price:Number(selectedDelivery.price)||0,pickupTime:selectedDelivery.name==='Balcão'?(document.getElementById('pickupTime')?.value||''):''}:null,
     payment:String(selectedPayment||''),
     received:selectedPayment==='Dinheiro'?Number(document.getElementById('cashReceived')?.value||0):0,
     items:cart.map(item=>({
@@ -3828,6 +3832,10 @@ function buildOrderMessage(order){
   return message;
 }
 function resendOrder(id){
+  if(window.BarukiClosed && !window.BarukiClosed.guard()){
+    window.BarukiClosed.show();
+    return false;
+  }
   const order=orderHistory.find(x=>String(x.id)===String(id));
   if(!order){toast('Pedido não encontrado.');return}
   // Reenvia exatamente a mensagem que ficou salva em Meus pedidos.
@@ -3889,6 +3897,10 @@ function updateEditedDeliveryFee(id){
 }
 
 function sendEditedOrderToWhatsApp(id){
+  if(window.BarukiClosed && !window.BarukiClosed.guard()){
+    window.BarukiClosed.show();
+    return false;
+  }
   const order=orderHistory.find(x=>String(x.id)===String(id));
   if(!order){toast('Pedido não encontrado.');return;}
 
@@ -4117,39 +4129,6 @@ function isOpen(){
   return day>=2 && day<=6 && minutes>=1080 && minutes<1350;
 }
 
-let closingCountdownInterval=null;
-function updateClosingCountdown(){
-  const el=document.getElementById('closingCountdown');
-  const bannerAlert=document.getElementById('bannerClosingAlert');
-  const bannerTime=document.getElementById('bannerClosingTime');
-  const now=new Date();
-  const day=now.getDay();
-  const openDay=day>=2 && day<=6;
-  const minutes=now.getHours()*60+now.getMinutes();
-  const close=new Date(now);
-  close.setHours(22,30,0,0);
-  const ms=close-now;
-  // O aviso aparece nos 40 minutos finais, durante o horário de funcionamento.
-  const showAlert=openDay && minutes>=1080 && ms>0 && ms<=40*60*1000;
-  if(showAlert){
-    const total=Math.ceil(ms/1000);
-    const min=Math.floor(total/60);
-    const sec=total%60;
-    const clock=String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0');
-    if(el){el.textContent='FECHAMENTO EM '+clock;el.classList.add('show');}
-    if(bannerTime)bannerTime.textContent=clock;
-    if(bannerAlert)bannerAlert.classList.add('show');
-  }else{
-    if(el)el.classList.remove('show');
-    if(bannerAlert)bannerAlert.classList.remove('show');
-  }
-}
-function startClosingCountdown(){
-  if(closingCountdownInterval)clearInterval(closingCountdownInterval);
-  updateClosingCountdown();
-  closingCountdownInterval=setInterval(updateClosingCountdown,1000);
-}
-
 // Atualiza o status automaticamente para que a mensagem apareça/desapareça no horário correto.
 setInterval(updateStatus,30000);
 
@@ -4164,7 +4143,6 @@ function updateStatus(){
     statusText.classList.toggle('closed-pulse',!open);
     statusText.classList.toggle('open-pulse',open);
   }
-  updateClosingCountdown();
   const attendingMessage=document.getElementById('attendingMessage');
   if(attendingMessage){
     // Só aparece enquanto a loja estiver realmente aberta.
@@ -4726,6 +4704,10 @@ function delivery(el){
   const addressFields=document.getElementById('addressFields');
   const showAddress=selectedDelivery.name==='Floriano' || selectedDelivery.name==='Nova Floresta';
   if(addressFields) addressFields.classList.toggle('show',showAddress);
+  const pickupFields=document.getElementById('pickupTimeFields');
+  if(pickupFields) pickupFields.style.display=selectedDelivery.name==='Balcão'?'block':'none';
+  if(selectedDelivery.name==='Balcão') populatePickupTimes();
+  else if(document.getElementById('pickupTime')) document.getElementById('pickupTime').value='';
 
   if(!showAddress){
     const address=document.getElementById('address');
@@ -4735,6 +4717,32 @@ function delivery(el){
   }
 
   updateCheckout();
+}
+
+function populatePickupTimes(){
+  const select=document.getElementById('pickupTime');
+  const note=document.getElementById('pickupTimeDays');
+  if(!select)return;
+  const day=new Date().getDay();
+  const validDay=day>=2 && day<=6;
+  const previous=select.value;
+  const times=[];
+  for(let minutes=18*60;minutes<=22*60+20;minutes+=20){
+    times.push(String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0'));
+  }
+  times.push('22:30');
+  select.innerHTML='<option value="">Selecione o horário</option>';
+  times.forEach(time=>{
+    const option=document.createElement('option');
+    option.value=time;
+    option.textContent=time;
+    select.appendChild(option);
+  });
+  select.disabled=!validDay;
+  if(note)note.textContent=validDay
+    ?''
+    :'Retirada disponível somente de terça a sábado, das 18:00 às 22:30.';
+  if(validDay && times.includes(previous))select.value=previous;
 }
 
 function payment(el){
@@ -4802,8 +4810,10 @@ function updateCheckout(){
   const box=document.getElementById('checkoutSummary');
   if(!box)return;
 
+  const pickupTime=selectedDelivery?.name==='Balcão'?(document.getElementById('pickupTime')?.value||''):'';
   box.innerHTML=
     '<div class="row"><span>Subtotal</span><strong>'+money(sub)+'</strong></div>'+
+    (pickupTime?'<div class="row"><span>Retirada</span><strong>'+pickupTime+'</strong></div>':'')+
     '<div class="row"><span>Entrega</span><strong>'+money(deliveryPrice)+'</strong></div>'+
     '<div class="total row"><span>Total</span><strong>'+money(total)+'</strong></div>';
 
@@ -4920,7 +4930,11 @@ function sendWhatsApp(){
   if(name) message+='◆ *Cliente:* '+name+'\n';
 
   if(selectedDelivery.name==='Balcão'){
+    const pickupTime=document.getElementById('pickupTime')?.value||'';
+    if(!pickupTime){toast('Selecione o horário para retirada.');return;}
+    if(!(new Date().getDay()>=2 && new Date().getDay()<=6)){toast('Retirada disponível somente de terça a sábado.');return;}
     message+='◆ *Retirada no balcão*\n';
+    message+='◆ *Horário para retirada:* '+pickupTime+'\n';
   }else{
     message+='◆ *Entrega:* '+selectedDelivery.name+' ('+money(selectedDelivery.price)+')\n';
     message+='◆ *Endereço:* '+address+'\n';
@@ -5048,7 +5062,7 @@ function initializeBaruki(){
     barukiTask('pedidos',()=>renderOrders());
     barukiTask('cronômetro de preparo',()=>startPrepTimer());
     barukiTask('checkout',()=>{enhanceCheckout();updateCheckout()});
-    barukiTask('status',()=>{updateStatus();startClosingCountdown()});
+    barukiTask('status',()=>{updateStatus()});
     // Sempre entra no cardápio em estado limpo, sem deixar uma tela antiga ativa.
     barukiTask('tela inicial',()=>{
       document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
@@ -6019,6 +6033,10 @@ function fecharConfiguracoesBaruki(){
     "https://www.socialcreator.com/srv/imgs/seccs/334896_ico.png?ts=1793557633"  // LINK 2: FECHADA
   ];
 
+  // LINK INDIVIDUAL: quando existe imagem neste link (enviada no social creator), os banners são desativados.
+  const disableBannersUrl="https://www.socialcreator.com/srv/imgs/seccs/335139_ico.png?ts=1794147826";
+  let bannersDisabled=false;
+
   // BANNERS VISÍVEIS: links 3 a 10.
   const urls=[
     "https://www.socialcreator.com/srv/imgs/seccs/334897_ico.png?ts=1793557654",
@@ -6156,6 +6174,22 @@ function fecharConfiguracoesBaruki(){
       const previousStatus=window.BarukiRemoteStoreStatus;
       window.BarukiRemoteStoreStatus=remoteStatus;
       if(previousStatus!==remoteStatus && typeof window.updateStatus==='function') window.updateStatus();
+
+      // DESATIVAR BANNERS: link individual. Se não identificar a imagem, segue normal.
+      let disableNow=false;
+      try{disableNow=!!(await readImage(disableBannersUrl));}catch(e){disableNow=false;}
+      if(disableNow!==bannersDisabled){
+        bannersDisabled=disableNow;
+        const wrapEl=root.closest('.baruki-banner-wrap')||root;
+        if(disableNow){
+          if(rotateTimer){clearInterval(rotateTimer);rotateTimer=null;}
+          wrapEl.style.setProperty('display','none','important');
+        }else{
+          wrapEl.style.removeProperty('display');
+          restart();
+        }
+      }
+      if(bannersDisabled)return;
 
       // BANNERS: a cada ciclo, só permanecem os links que realmente carregam imagem.
       const results=await Promise.all(urls.map(url=>readBanner(url)));
@@ -8126,5 +8160,253 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharAvisoS
 })();
 </script>
 
+
+<!-- SEGUNDA TELA DE AVISO REMOTO: independente dos avisos existentes -->
+<style id="baruki-segundo-aviso-imagem-style">
+#barukiSegundoAvisoImagemRemoto{
+  position:fixed;
+  inset:0;
+  z-index:1000007;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  padding:18px;
+  background:rgba(0,0,0,.94);
+  overscroll-behavior:contain;
+  touch-action:none;
+}
+#barukiSegundoAvisoImagemRemoto.ativo{display:flex;}
+#barukiSegundoAvisoImagemRemoto .baruki-segundo-aviso-conteudo{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  max-width:96vw;
+  max-height:94vh;
+}
+#barukiSegundoAvisoImagemRemoto .baruki-segundo-aviso-imagem{
+  display:block;
+  max-width:96vw;
+  max-height:90vh;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  border-radius:12px;
+  box-shadow:0 12px 45px rgba(0,0,0,.55);
+}
+#barukiSegundoAvisoImagemRemoto .baruki-segundo-aviso-fechar{
+  position:absolute;
+  top:-14px;
+  right:-14px;
+  z-index:2;
+  display:grid;
+  place-items:center;
+  width:40px;
+  height:40px;
+  padding:0;
+  border:2px solid #fff;
+  border-radius:50%;
+  background:#e52222;
+  color:#fff;
+  font-size:28px;
+  font-weight:900;
+  line-height:1;
+  cursor:pointer;
+  box-shadow:0 3px 12px #0008;
+}
+</style>
+<div id="barukiSegundoAvisoImagemRemoto" role="dialog" aria-modal="true" aria-label="Segundo aviso da Lanchonete Baruki">
+  <div class="baruki-segundo-aviso-conteudo">
+    <button id="barukiSegundoAvisoFechar" class="baruki-segundo-aviso-fechar" type="button" aria-label="Fechar segundo aviso">×</button>
+    <img id="barukiSegundoAvisoImagem" class="baruki-segundo-aviso-imagem" alt="Segundo aviso da Lanchonete Baruki">
+  </div>
+</div>
+<script id="baruki-segundo-aviso-imagem-script">
+(function(){
+  const aviso=document.getElementById('barukiSegundoAvisoImagemRemoto');
+  const imagem=document.getElementById('barukiSegundoAvisoImagem');
+  const botaoFechar=document.getElementById('barukiSegundoAvisoFechar');
+  if(!aviso||!imagem||!botaoFechar)return;
+
+  // Segunda verificação independente: consulta o link a cada 5 segundos.
+  const linkImagemAviso='https://www.socialcreator.com/srv/imgs/seccs/335086_ico.png?ts=1794094780';
+  let verificando=false;
+  let fechadoEnquantoAtivo=false;
+
+  function abrirAviso(src){
+    imagem.src=src;
+    aviso.classList.add('ativo');
+  }
+
+  function fecharAviso(){
+    aviso.classList.remove('ativo');
+  }
+
+  botaoFechar.addEventListener('click',function(){
+    fechadoEnquantoAtivo=true;
+    fecharAviso();
+  });
+
+  function verificarImagemAviso(){
+    if(verificando||document.hidden)return;
+    verificando=true;
+    const teste=new Image();
+
+    teste.onload=function(){
+      if(!fechadoEnquantoAtivo)abrirAviso(teste.src);
+      verificando=false;
+    };
+
+    teste.onerror=function(){
+      fechadoEnquantoAtivo=false;
+      fecharAviso();
+      imagem.removeAttribute('src');
+      verificando=false;
+    };
+
+    teste.src=linkImagemAviso+(linkImagemAviso.includes('?')?'&':'?')+'_baruki_second_notice_check='+Date.now();
+  }
+
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden)verificarImagemAviso();
+  });
+
+  verificarImagemAviso();
+  setInterval(verificarImagemAviso,5000);
+})();
+</script>
+
+
+<style id="baruki-status-layout-correction">
+/* Correção do status no celular: separa as mensagens e impede sobreposição. */
+.status-line{
+  display:flex!important; flex-wrap:wrap!important; align-items:center!important;
+  justify-content:center!important; gap:6px 8px!important; width:100%!important;
+  min-width:0!important; overflow:visible!important;
+}
+.status-line #statusText, .status-line #attendingMessage{
+  flex:0 1 auto!important; min-width:0!important; max-width:100%!important;
+  white-space:normal!important; overflow-wrap:anywhere!important;
+  text-align:center!important; line-height:1.2!important;
+}
+.status-line #attendingMessage.show{display:inline-flex!important;}
+@media(max-width:420px){
+  .status-line{gap:5px!important;}
+  .status-line #statusText{font-size:clamp(10px,3vw,13px)!important;padding:6px 9px!important;}
+  .status-line #attendingMessage{font-size:clamp(9px,2.8vw,12px)!important;padding:6px 9px!important;min-height:28px!important;}
+}
+</style>
+
+<style id="baruki-status-lado-a-lado">
+/* Status (LOJA ABERTA) e ESTAMOS ATENDENDO lado a lado, no mesmo bloco. */
+.status-line{flex-wrap:nowrap!important;justify-content:center!important;align-items:center!important}
+.status-line #statusText,.status-line #attendingMessage{white-space:nowrap!important;overflow-wrap:normal!important;flex:0 0 auto!important;max-width:none!important}
+@media(max-width:420px){
+  .status-line{gap:5px!important}
+  .status-line #statusText{font-size:clamp(9px,2.9vw,12px)!important;padding:5px 6px!important;transform:none!important;margin:0!important}
+  .status-line #attendingMessage{font-size:clamp(8px,2.6vw,11px)!important;padding:5px 7px!important;min-height:28px!important;letter-spacing:0!important;gap:4px!important}
+  .status-line #attendingMessage::before{width:12px!important;height:12px!important;flex-basis:12px!important;font-size:9px!important}
+}
+</style>
+
+<!-- ===================== LUZES DE NATAL BARUKI (bloco adicionado) =====================
+     Moldura de luzes em volta do site, num espaço reservado (não cobre banners, mensagens etc.).
+     Liga sozinha quando a imagem gatilho (url abaixo) existe; desliga quando ela é removida.
+     Para DESATIVAR o recurso por completo: mude "ativo" para false no script abaixo.
+     Nada do código original foi alterado. -->
+<style id="baruki-natal-css">
+/* Espaço reservado para as luzes (para não ficarem em cima do conteúdo) */
+body.nat-on{padding-top:14px!important;padding-left:14px!important;padding-right:14px!important}
+
+/* Moldura fixa: topo, esquerda e direita (embaixo fica a barra de navegação do site) */
+.nat-frame{position:fixed;inset:0;z-index:90;pointer-events:none}
+.nat-frame i{position:absolute;overflow:hidden}
+.nat-frame .t{top:0;left:0;right:0;height:14px}
+.nat-frame .l{top:14px;bottom:0;left:0;width:14px}
+.nat-frame .r{top:14px;bottom:0;right:0;width:14px}
+.nat-frame i::before,.nat-frame i::after{content:"";position:absolute;inset:0;background-repeat:repeat}
+.nat-frame .t::before,.nat-frame .t::after{background-repeat:repeat-x;background-size:112px 14px}
+.nat-frame .l::before,.nat-frame .l::after,.nat-frame .r::before,.nat-frame .r::after{background-repeat:repeat-y;background-size:14px 112px}
+
+/* Topo: lâmpadas na horizontal */
+.nat-frame .t::before{background-image:
+  radial-gradient(circle at 14px 7px,#ff2b2b 0 4px,rgba(255,43,43,.35) 5px,transparent 8px),
+  radial-gradient(circle at 70px 7px,#2b8bff 0 4px,rgba(43,139,255,.35) 5px,transparent 8px)}
+.nat-frame .t::after{background-image:
+  radial-gradient(circle at 42px 7px,#ffd23a 0 4px,rgba(255,210,58,.35) 5px,transparent 8px),
+  radial-gradient(circle at 98px 7px,#2bd45a 0 4px,rgba(43,212,90,.35) 5px,transparent 8px)}
+/* Laterais: lâmpadas na vertical */
+.nat-frame .l::before,.nat-frame .r::before{background-image:
+  radial-gradient(circle at 7px 14px,#ff2b2b 0 4px,rgba(255,43,43,.35) 5px,transparent 8px),
+  radial-gradient(circle at 7px 70px,#2b8bff 0 4px,rgba(43,139,255,.35) 5px,transparent 8px)}
+.nat-frame .l::after,.nat-frame .r::after{background-image:
+  radial-gradient(circle at 7px 42px,#ffd23a 0 4px,rgba(255,210,58,.35) 5px,transparent 8px),
+  radial-gradient(circle at 7px 98px,#2bd45a 0 4px,rgba(43,212,90,.35) 5px,transparent 8px)}
+
+.nat-frame i::before{animation:natPisca 1.6s ease-in-out infinite}
+.nat-frame i::after{animation:natPisca 1.6s ease-in-out infinite;animation-delay:.8s}
+@keyframes natPisca{0%,100%{opacity:.25}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  .nat-frame i::before,.nat-frame i::after{animation:none!important;opacity:.9}
+}
+</style>
+<script id="baruki-natal-js">
+(function(){
+  /* ---- CONFIGURAÇÃO ---- */
+  var NATAL={
+    ativo:true,   /* chave geral: false = desliga o recurso por completo */
+    url:'https://www.socialcreator.com/srv/imgs/seccs/335122_ico.png?ts=1794118495', /* imagem "gatilho" */
+    intervalo:5000 /* verifica a cada 5 segundos */
+  };
+  if(!NATAL.ativo) return;
+
+  var ligado=false, verificando=false, timer=null;
+
+  function ligar(){
+    if(ligado) return;
+    var f=document.createElement('div');f.className='nat-frame';f.setAttribute('aria-hidden','true');
+    f.innerHTML='<i class="t"></i><i class="l"></i><i class="r"></i>';
+    document.body.appendChild(f);
+    document.body.classList.add('nat-on');
+    ligado=true;
+  }
+  function desligar(){
+    if(!ligado) return;
+    var f=document.querySelector('.nat-frame');
+    if(f&&f.parentNode) f.parentNode.removeChild(f);
+    document.body.classList.remove('nat-on'); /* volta o cardápio exatamente como era */
+    ligado=false;
+  }
+
+  /* Testa em segundo plano se a imagem existe (a página não recarrega nem pisca) */
+  function verificar(){
+    if(verificando) return;
+    if(navigator.onLine===false) return;   /* sem internet: mantém o estado atual */
+    verificando=true;
+    var img=new Image(), fim=false;
+    function concluir(existe){
+      if(fim) return; fim=true; verificando=false;
+      img.onload=img.onerror=null;
+      if(existe===true) ligar();
+      else if(existe===false) desligar();
+      /* existe===null (demorou demais): mantém o estado atual */
+    }
+    img.onload=function(){concluir(img.naturalWidth>0);};
+    img.onerror=function(){concluir(false);};
+    setTimeout(function(){concluir(null);},4500);
+    img.src=NATAL.url+(NATAL.url.indexOf('?')>-1?'&':'?')+'nc='+Date.now();
+  }
+
+  function iniciar(){
+    verificar();
+    timer=setInterval(function(){ if(!document.hidden) verificar(); },NATAL.intervalo);
+    document.addEventListener('visibilitychange',function(){ if(!document.hidden) verificar(); });
+    window.addEventListener('online',verificar);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',iniciar):iniciar();
+})();
+</script>
+<!-- =================== FIM DAS LUZES DE NATAL BARUKI =================== -->
 </body>
 </html>
