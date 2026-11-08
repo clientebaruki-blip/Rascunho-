@@ -8530,5 +8530,133 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
   setInterval(ciclo,5000);
 })();
 </script>
+<script id="baruki-planilha">
+/* =========================================================
+   PLANILHA GOOGLE — controla preço, categoria e ingredientes
+   Colunas lidas: Produto, Categoria, Preço (R$), Ingredientes
+   (opcionais: Preço G, Descrição).
+   Se a planilha não carregar, o cardápio atual continua funcionando.
+   ========================================================= */
+(function(){
+  var SHEET_ID='1Jdc-_dkAIjyoDHKeLLVobrZVvfCnbpRC-q76UlHwaK8';
+  var SHEET_TAB='Cardápio';
+  var SHEET_URL='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
+  var CACHE_KEY='baruki_planilha_cache_v3';
+  var CATS={lanches:'lanches',cachorrao:'cachorro',cachorro:'cachorro',porcoes:'porcoes',bebidas:'bebidas',pizza:'pizzas',pizzas:'pizzas',pasteis:'pastel',pastel:'pastel'};
+
+  function plain(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+  function norm(s){return plain(s).replace(/\s+/g,' ').trim().toUpperCase();}
+  function key(cat,name){return cat+'|'+plain(name).toUpperCase().replace(/[^A-Z0-9]/g,'');}
+
+  function parseCSV(text){
+    var rows=[],row=[],cur='',q=false,i,c;
+    for(i=0;i<text.length;i++){
+      c=text[i];
+      if(q){
+        if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; }
+        else cur+=c;
+      }else{
+        if(c==='"')q=true;
+        else if(c===','){row.push(cur);cur='';}
+        else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';}
+        else if(c!=='\r')cur+=c;
+      }
+    }
+    if(cur!==''||row.length){row.push(cur);rows.push(row);}
+    return rows;
+  }
+
+  function parseMoney(v){
+    var s=String(v==null?'':v).replace(/[^\d,.\-]/g,'');
+    if(!s)return 0;
+    if(s.indexOf(',')>-1)s=s.replace(/\./g,'').replace(',','.');
+    var n=parseFloat(s);
+    return isNaN(n)?0:n;
+  }
+
+  function splitIngredients(v){
+    return String(v||'').split(/\s*[;,|]\s*/).map(function(x){return x.trim().toLowerCase();}).filter(Boolean);
+  }
+
+  function apply(csv){
+    var rows=parseCSV(csv);
+    if(rows.length<2)return false;
+    var col={};
+    rows[0].map(norm).forEach(function(h,i){
+      if(h==='PRODUTO'||h==='NOME')col.name=i;
+      else if(h==='CATEGORIA')col.cat=i;
+      else if(h==='INGREDIENTES')col.ing=i;
+      else if(h==='DESCRICAO')col.desc=i;
+      else if(h==='PRECO G'||h==='PRECO GRANDE')col.priceG=i;
+      else if(h.indexOf('PRECO')===0)col.price=i;
+    });
+    if(col.name==null||col.cat==null||col.price==null)return false;
+    var parsed=[];
+    for(var r=1;r<rows.length;r++){
+      var x=rows[r],name=String(x[col.name]||'').trim();
+      var cat=CATS[norm(x[col.cat]).toLowerCase()];
+      if(!name||!cat)continue;
+      parsed.push({name:name,cat:cat,price:parseMoney(x[col.price]),
+        priceG:col.priceG!=null?parseMoney(x[col.priceG]):0,
+        ing:col.ing!=null?String(x[col.ing]||'').trim():'',
+        desc:col.desc!=null?String(x[col.desc]||'').trim():''});
+    }
+    if(parsed.length<10)return false; // proteção: planilha vazia/incompleta não apaga o cardápio
+    var byKey={};
+    products.forEach(function(p){byKey[key(p.cat,p.name)]=p;});
+    var added=0;
+    parsed.forEach(function(d){
+      var p=byKey[key(d.cat,d.name)];
+      if(!p){
+        // produto novo: só entra onde não precisa de grupo (lanches, cachorrão, porções)
+        if(d.cat!=='lanches'&&d.cat!=='cachorro'&&d.cat!=='porcoes'){console.warn('[Planilha] produto novo ignorado (precisa de grupo):',d.name);return;}
+        added++;
+        p={id:'planilha_'+d.cat+'_'+added+'_'+key('',d.name).slice(1,12),cat:d.cat,name:d.name,price:0,desc:'',ingredients:[],group:'',sizePrices:false};
+        products.push(p);byKey[key(d.cat,d.name)]=p;
+      }
+      p.price=d.price;
+      if(d.priceG>0&&!p.special){p.priceG=d.priceG;p.sizePrices=true;}
+      if(d.desc)p.desc=d.desc;
+      if(d.ing)p.ingredients=splitIngredients(d.ing);
+    });
+    return true;
+  }
+
+  function refresh(){
+    try{
+      var menu=document.getElementById('menu');
+      if(!menu||menu.classList.contains('active'))renderProducts();
+    }catch(e){console.error('[Planilha] erro ao atualizar a tela',e);}
+  }
+
+  var last='',busy=false;
+
+  try{ // usa a última planilha salva enquanto a nova carrega
+    var saved=localStorage.getItem(CACHE_KEY);
+    if(saved&&apply(saved)){last=saved;refresh();}
+  }catch(e){}
+
+  // Confere a planilha a cada 5 segundos; só atualiza a tela se algo mudou.
+  function load(){
+    if(busy||document.hidden)return;
+    busy=true;
+    fetch(SHEET_URL+'&_='+Date.now(),{cache:'no-store'}).then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.text();
+    }).then(function(csv){
+      if(csv===last)return; // sem alteração: nada muda
+      if(apply(csv)){
+        last=csv;
+        try{localStorage.setItem(CACHE_KEY,csv);}catch(e){}
+        refresh();
+      }else console.warn('[Planilha] formato inesperado — mantendo o cardápio atual.');
+    }).catch(function(e){console.warn('[Planilha] não foi possível carregar — mantendo o cardápio atual.',e);})
+      .then(function(){busy=false;});
+  }
+  load();
+  setInterval(load,5000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+})();
+</script>
 </body>
 </html>
