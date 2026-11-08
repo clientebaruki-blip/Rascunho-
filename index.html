@@ -8538,12 +8538,20 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    Se a planilha não carregar, o cardápio atual continua funcionando.
    ========================================================= */
 (function(){
-  var SHEET_ID='1Jdc-_dkAIjyoDHKeLLVobrZVvfCnbpRC-q76UlHwaK8';
+  var SHEET_ID='1CtdIxlpUhonZmffqqTBu5ioaEGqNHeVHO3sRFGkvTYs';
   var SHEET_TAB='Cardápio';
   var SHEET_URL='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
   var CACHE_KEY='baruki_planilha_cache_v3';
   var CATS={lanches:'lanches',cachorrao:'cachorro',cachorro:'cachorro',porcoes:'porcoes',bebidas:'bebidas',pizza:'pizzas',pizzas:'pizzas',pasteis:'pastel',pastel:'pastel'};
 
+  // Aceita variações como "Pizza Doce", "Pizza Salgada", "Pastéis", "Pastel Doce"...
+  function resolveCat(raw){
+    var n=norm(raw).toLowerCase();
+    if(CATS[n])return {cat:CATS[n],hint:''};
+    if(/pizza/.test(n))return {cat:'pizzas',hint:/doce/.test(n)?'Pizza Doce':/especia/.test(n)?'Especiais':''};
+    if(/past/.test(n))return {cat:'pastel',hint:/doce/.test(n)?'Doce':/especia/.test(n)?'Super Especial':/dois/.test(n)?'Dois Sabores':/simples/.test(n)?'Simples':''};
+    return {cat:undefined,hint:''};
+  }
   function plain(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
   function norm(s){return plain(s).replace(/\s+/g,' ').trim().toUpperCase();}
   function key(cat,name){return cat+'|'+plain(name).toUpperCase().replace(/[^A-Z0-9]/g,'');}
@@ -8587,6 +8595,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
       else if(h==='CATEGORIA')col.cat=i;
       else if(h==='INGREDIENTES')col.ing=i;
       else if(h==='DESCRICAO')col.desc=i;
+      else if(h==='GRUPO'||h==='SUBCATEGORIA')col.grp=i;
       else if(h==='PRECO G'||h==='PRECO GRANDE')col.priceG=i;
       else if(h.indexOf('PRECO')===0)col.price=i;
     });
@@ -8594,12 +8603,13 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
     var parsed=[];
     for(var r=1;r<rows.length;r++){
       var x=rows[r],name=String(x[col.name]||'').trim();
-      var cat=CATS[norm(x[col.cat]).toLowerCase()];
+      var rc=resolveCat(x[col.cat]),cat=rc.cat;
       if(!name||!cat)continue;
       parsed.push({name:name,cat:cat,price:parseMoney(x[col.price]),
         priceG:col.priceG!=null?parseMoney(x[col.priceG]):0,
         ing:col.ing!=null?String(x[col.ing]||'').trim():'',
-        desc:col.desc!=null?String(x[col.desc]||'').trim():''});
+        desc:col.desc!=null?String(x[col.desc]||'').trim():'',
+        grp:(col.grp!=null?String(x[col.grp]||'').trim():'')||rc.hint});
     }
     if(parsed.length<10)return false; // proteção: planilha vazia/incompleta não apaga o cardápio
     var byKey={};
@@ -8609,13 +8619,19 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
       var p=byKey[key(d.cat,d.name)];
       if(!p){
         // produto novo: só entra onde não precisa de grupo (lanches, cachorrão, porções)
-        if(d.cat!=='lanches'&&d.cat!=='cachorro'&&d.cat!=='porcoes'){console.warn('[Planilha] produto novo ignorado (precisa de grupo):',d.name);return;}
+        var grp='';
+        if(d.cat==='pizzas'||d.cat==='pastel'){
+          // sabor novo de pizza/pastel: usa a coluna Grupo; sem ela, cai no grupo principal
+          var valid=d.cat==='pizzas'?['Pizzas','Especiais','Pizza Doce']:['Simples','Dois Sabores','Super Especial','Doce'];
+          grp=valid.filter(function(g){return norm(g)===norm(d.grp);})[0]||valid[0];
+        }else if(d.cat!=='lanches'&&d.cat!=='cachorro'&&d.cat!=='porcoes'){console.warn('[Planilha] produto novo ignorado (categoria sem grupo):',d.name);return;}
         added++;
-        p={id:'planilha_'+d.cat+'_'+added+'_'+key('',d.name).slice(1,12),cat:d.cat,name:d.name,price:0,desc:'',ingredients:[],group:'',sizePrices:false};
+        p={id:'planilha_'+d.cat+'_'+added+'_'+key('',d.name).slice(1,12),cat:d.cat,name:(d.cat==='pizzas'&&d.name.indexOf('🍕')!==0?'🍕'+d.name:d.name),price:0,desc:'',ingredients:[],group:grp,sizePrices:false};
         products.push(p);byKey[key(d.cat,d.name)]=p;
       }
       p.price=d.price;
       if(d.priceG>0&&!p.special){p.priceG=d.priceG;p.sizePrices=true;}
+      else if(p.cat==='pizzas'&&!p.special&&!p.priceG&&d.price>0){p.priceG=d.price;p.sizePrices=true;}
       if(d.desc)p.desc=d.desc;
       if(d.ing)p.ingredients=splitIngredients(d.ing);
     });
@@ -8625,7 +8641,12 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
   function refresh(){
     try{
       var menu=document.getElementById('menu');
-      if(!menu||menu.classList.contains('active'))renderProducts();
+      if(!menu||menu.classList.contains('active')){
+        var act=document.querySelector('#products .beverage-subcat.active'),idx=-1;
+        if(act)idx=[].indexOf.call(act.parentNode.children,act);
+        renderProducts();
+        if(idx>0){var bs=document.querySelectorAll('#products .beverage-subcat');if(bs[idx])bs[idx].click();}
+      }
     }catch(e){console.error('[Planilha] erro ao atualizar a tela',e);}
   }
 
