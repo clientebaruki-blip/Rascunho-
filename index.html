@@ -7985,11 +7985,21 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharAvisoS
   line-height:1.45;
   font-weight:800;
 }
+#barukiAvisoRemoto .baruki-catraca{margin:26px auto 0;width:min(100%,300px);}
+#barukiAvisoRemoto .baruki-catraca input{width:100%;box-sizing:border-box;padding:12px 14px;font-size:16px;border-radius:10px;border:1px solid #444;background:#121212;color:#fff;text-align:center;outline:none;}
+#barukiAvisoRemoto .baruki-catraca input:focus{border-color:#ff6b00;}
+#barukiAvisoRemoto .baruki-catraca button{width:100%;margin-top:10px;padding:12px;font-size:15px;font-weight:700;border:0;border-radius:10px;background:#ff6b00;color:#fff;cursor:pointer;}
+#barukiAvisoRemoto .baruki-catraca-erro{min-height:18px;margin-top:8px;font-size:13px;color:#ff3b30;}
 </style>
 <div id="barukiAvisoRemoto" role="dialog" aria-modal="true" aria-label="Lanchonete Baruki em manutenção">
   <div class="baruki-manutencao-conteudo">
     <h2 class="baruki-manutencao-titulo">EM MANUTENÇÃO</h2>
     <p class="baruki-manutencao-texto">O sistema está temporariamente em manutenção.</p>
+    <div class="baruki-catraca" id="barukiCatraca">
+      <input id="barukiCatracaLogin" type="password" placeholder="Login para testar o site" autocomplete="off" autocapitalize="off" autocorrect="off">
+      <button type="button" id="barukiCatracaEntrar">Entrar</button>
+      <div class="baruki-catraca-erro" id="barukiCatracaErro" aria-live="polite"></div>
+    </div>
   </div>
 </div>
 <script id="baruki-aviso-remoto-script">
@@ -8001,8 +8011,47 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharAvisoS
   // Quando a imagem existe, a tela de manutenção aparece. Sem imagem, o sistema segue normal.
   const linkAviso='https://www.socialcreator.com/srv/imgs/seccs/335079_ico.png?ts=1794020518';
   let verificando=false;
+  let forcado=false; // usado pela função de teste
+
+  // CATRACA: com o login correto, libera o site para testes nesta sessão.
+  const LOGIN_TESTE='Baruki2626';
+  const CHAVE_TESTE='baruki_manutencao_liberada';
+  const campoLogin=document.getElementById('barukiCatracaLogin');
+  const erroLogin=document.getElementById('barukiCatracaErro');
+
+  function testeLiberado(){
+    try{return sessionStorage.getItem(CHAVE_TESTE)==='1';}catch(e){return false;}
+  }
+
+  function tentarEntrar(){
+    if(campoLogin.value.trim()===LOGIN_TESTE){
+      try{sessionStorage.setItem(CHAVE_TESTE,'1');}catch(e){}
+      forcado=false;
+      campoLogin.value='';
+      erroLogin.textContent='';
+      liberarSite();
+    }else{
+      erroLogin.textContent='Login incorreto.';
+      campoLogin.select();
+    }
+  }
+  document.getElementById('barukiCatracaEntrar').addEventListener('click',tentarEntrar);
+  campoLogin.addEventListener('keydown',function(e){if(e.key==='Enter')tentarEntrar();});
+
+  // FUNÇÃO TESTE: testeManutencao() força a tela de manutenção; testeManutencao(false) desliga.
+  window.testeManutencao=function(ligar){
+    if(ligar===false){
+      forcado=false;
+      liberarSite();
+      return;
+    }
+    try{sessionStorage.removeItem(CHAVE_TESTE);}catch(e){}
+    forcado=true;
+    bloquearSite();
+  };
 
   function bloquearSite(){
+    if(testeLiberado())return;
     aviso.classList.add('ativo');
     document.body.style.overflow='hidden';
     document.documentElement.style.overflow='hidden';
@@ -8025,7 +8074,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharAvisoS
     };
 
     teste.onerror=function(){
-      liberarSite();
+      if(!forcado)liberarSite();
       verificando=false;
     };
 
@@ -8538,7 +8587,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    Se a planilha não carregar, o cardápio atual continua funcionando.
    ========================================================= */
 (function(){
-  var SHEET_ID='1CtdIxlpUhonZmffqqTBu5ioaEGqNHeVHO3sRFGkvTYs';
+  var SHEET_ID='13DxZa01S51bx8vNF5LW1EO-obadwYT5ml36tQ51sIQI';
   var SHEET_TAB='Cardápio';
   var SHEET_URL='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
   var CACHE_KEY='baruki_planilha_cache_v3';
