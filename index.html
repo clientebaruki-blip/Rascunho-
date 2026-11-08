@@ -1877,16 +1877,21 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 <body>
 <!-- TELA DE MANUTENÇÃO BARUKI (no início da página para aparecer imediatamente) -->
 <style id="baruki-aviso-remoto-style">
-#barukiAvisoRemoto{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;box-sizing:border-box;padding:20px;background:rgba(0,0,0,.97);overscroll-behavior:contain;text-align:center;}
+#barukiAvisoRemoto{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;box-sizing:border-box;padding:20px;background:rgba(0,0,0,.97);overscroll-behavior:contain;text-align:center;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 #barukiAvisoRemoto.ativo{display:flex;}
-#barukiAvisoRemoto .baruki-manutencao-conteudo{width:min(100%,520px);padding:30px 20px;box-sizing:border-box;text-align:center;}
+#barukiAvisoRemoto .baruki-manutencao-conteudo{width:min(100%,520px);padding:30px 20px;box-sizing:border-box;text-align:center;margin:auto;}
 #barukiAvisoRemoto .baruki-manutencao-titulo{margin:0;color:#ff3b30;font-size:clamp(38px,11vw,72px);line-height:1.05;font-weight:1000;letter-spacing:1px;text-shadow:0 0 18px rgba(255,59,48,.35),0 3px 10px rgba(0,0,0,.65);}
 #barukiAvisoRemoto .baruki-manutencao-texto{margin:14px 0 0;color:#fff;font-size:clamp(15px,4vw,20px);line-height:1.45;font-weight:800;}
-#barukiAvisoRemoto .baruki-catraca{margin:26px auto 0;width:min(100%,300px);}
-#barukiAvisoRemoto .baruki-catraca input{width:100%;box-sizing:border-box;padding:12px 14px;font-size:16px;border-radius:10px;border:1px solid #444;background:#121212;color:#fff;text-align:center;outline:none;}
-#barukiAvisoRemoto .baruki-catraca input:focus{border-color:#ff6b00;}
-#barukiAvisoRemoto .baruki-catraca button{width:100%;margin-top:10px;padding:12px;font-size:15px;font-weight:700;border:0;border-radius:10px;background:#ff6b00;color:#fff;cursor:pointer;}
+#barukiAvisoRemoto .baruki-catraca{display:block!important;visibility:visible!important;opacity:1!important;margin:26px auto 0;width:min(100%,300px);}
+#barukiAvisoRemoto .baruki-catraca input{display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;min-height:46px!important;box-sizing:border-box!important;padding:12px 14px!important;font-size:16px!important;border-radius:10px!important;border:2px solid #666!important;background:#121212!important;color:#fff!important;-webkit-text-fill-color:#fff!important;text-align:center;outline:none;}
+#barukiAvisoRemoto .baruki-catraca input::placeholder{color:#bdbdbd!important;-webkit-text-fill-color:#bdbdbd!important;opacity:1!important;}
+#barukiAvisoRemoto .baruki-catraca input:focus{border-color:#ff6b00!important;}
+#barukiAvisoRemoto .baruki-catraca button{display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;min-height:46px!important;margin-top:10px!important;padding:12px!important;font-size:15px!important;font-weight:700!important;border:0!important;border-radius:10px!important;background:#ff6b00!important;color:#fff!important;cursor:pointer;}
 #barukiAvisoRemoto .baruki-catraca-erro{min-height:18px;margin-top:8px;font-size:13px;color:#ff3b30;}
+/* Manutenção tem prioridade total: os dois avisos com X (e demais pop-ups) não abrem por cima. */
+html.baruki-manut-ativa #barukiAvisoImagemRemoto,html.baruki-manut-ativa #barukiSegundoAvisoImagemRemoto,html.baruki-manut-ativa #barukiClosedOverlay,html.baruki-manut-ativa #avisoSiteTesteOverlay,
+html.baruki-manut-pendente #barukiAvisoImagemRemoto,html.baruki-manut-pendente #barukiSegundoAvisoImagemRemoto,
+html.baruki-banners-pendente #barukiAvisoImagemRemoto,html.baruki-banners-pendente #barukiSegundoAvisoImagemRemoto{display:none!important}
 </style>
 <div id="barukiAvisoRemoto" role="dialog" aria-modal="true" aria-label="Lanchonete Baruki em manutenção">
   <div class="baruki-manutencao-conteudo">
@@ -1925,13 +1930,37 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   function lembrar(ativa){
     try{localStorage.setItem(CHAVE_ULTIMO,ativa?'1':'0');}catch(e){}
   }
+  var raiz=document.documentElement;
+  // Enquanto a 1ª verificação não termina, os avisos ficam em espera (manutenção abre primeiro).
+  raiz.classList.add('baruki-manut-pendente');
+  // FILA DE PRIORIDADE: 1º manutenção  ->  2º os 8 banners  ->  3º os dois avisos com X.
+  // Ordem final: 1 manutenção -> 2 os 8 banners -> 3 os dois avisos -> 4 banner de rodapé -> 5 modo natal.
+  var resolverManut,resolverBanners,resolverAvisos,resolverRodape,contAvisos=0;
+  window.BarukiPrioridade={
+    manutencao:new Promise(function(r){resolverManut=r;}),
+    banners:new Promise(function(r){resolverBanners=r;}),
+    avisos:new Promise(function(r){resolverAvisos=r;}),
+    rodape:new Promise(function(r){resolverRodape=r;}),
+    bannersProntos:function(){raiz.classList.remove('baruki-banners-pendente');resolverBanners();},
+    avisoPronto:function(){contAvisos++;if(contAvisos>=2)resolverAvisos();},
+    rodapePronto:function(){resolverRodape();}
+  };
+  raiz.classList.add('baruki-banners-pendente');
+  // Segurança: se alguma etapa não responder, a próxima é liberada mesmo assim (nada fica preso).
+  setTimeout(window.BarukiPrioridade.bannersProntos,8000);
+  setTimeout(resolverAvisos,12000);
+  setTimeout(resolverRodape,16000);
+  function concluirPendente(){raiz.classList.remove('baruki-manut-pendente');resolverManut();}
+
   function bloquearSite(){
     if(testeLiberado())return;
+    raiz.classList.add('baruki-manut-ativa');
     aviso.classList.add('ativo');
     document.documentElement.style.overflow='hidden';
     if(document.body)document.body.style.overflow='hidden';
   }
   function liberarSite(){
+    raiz.classList.remove('baruki-manut-ativa');
     aviso.classList.remove('ativo');
     document.documentElement.style.overflow='';
     if(document.body)document.body.style.overflow='';
@@ -1967,10 +1996,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
     var teste=new Image();
     var terminou=false;
     function fim(){terminou=true;verificando=false;teste.onload=teste.onerror=null;clearTimeout(t);}
-    var t=setTimeout(function(){if(!terminou)fim();},TIMEOUT); // não trava se a rede ficar pendurada
-    teste.onload=function(){if(terminou)return;fim();lembrar(true);bloquearSite();};
+    var t=setTimeout(function(){if(!terminou){fim();concluirPendente();}},TIMEOUT); // não trava se a rede ficar pendurada
+    teste.onload=function(){if(terminou)return;fim();lembrar(true);bloquearSite();concluirPendente();};
     teste.onerror=function(){
-      if(terminou)return;fim();
+      if(terminou)return;fim();concluirPendente();
       // Sem internet não é sinal de "manutenção terminou": mantém o estado atual.
       if(navigator.onLine===false)return;
       lembrar(false);
@@ -6166,7 +6195,8 @@ function fecharConfiguracoesBaruki(){
   ];
 
   window.BarukiRemoteStoreStatus=null;
-  let banners=[], index=0, rotateTimer=null, pollTimer=null, startX=0, busy=false;
+  let banners=[], index=0, rotateTimer=null, pollTimer=null, startX=0, busy=false, primeiraCargaFeita=false;
+  function comLimite(p,ms){return Promise.race([p,new Promise(function(r){setTimeout(function(){r(null);},ms);})]);}
 
   async function readImage(url){
     try{
@@ -6279,11 +6309,17 @@ function fecharConfiguracoesBaruki(){
     if(busy||document.hidden)return;
     busy=true;
     try{
-      // STATUS: bloco original preservado integralmente, com os mesmos links,
-      // leitura, prioridade e chamada de updateStatus().
-      const statusResults=await Promise.all(statusUrls.map(async url=>{
+      // PRIORIDADE: os banners só começam depois da manutenção (1º) e liberam os avisos ao terminar (3º).
+      if(!primeiraCargaFeita&&window.BarukiPrioridade)await window.BarukiPrioridade.manutencao;
+      // Status, "desativar banners" e os 8 banners são buscados AO MESMO TEMPO (antes era um depois do outro).
+      const statusP=Promise.all(statusUrls.map(async url=>{
         try{return await readImage(url);}catch(e){return null;}
       }));
+      const disableP=readImage(disableBannersUrl).then(()=>true,()=>false);
+      const bannersP=Promise.all(urls.map(url=>banners.length?readBanner(url):comLimite(readBanner(url),6000)));
+      // STATUS: bloco original preservado integralmente, com os mesmos links,
+      // leitura, prioridade e chamada de updateStatus().
+      const statusResults=await statusP;
       let remoteStatus=null;
       if(statusResults[0]) remoteStatus=true;
       else if(statusResults[1]) remoteStatus=false;
@@ -6292,8 +6328,7 @@ function fecharConfiguracoesBaruki(){
       if(previousStatus!==remoteStatus && typeof window.updateStatus==='function') window.updateStatus();
 
       // DESATIVAR BANNERS: link individual. Se não identificar a imagem, segue normal.
-      let disableNow=false;
-      try{disableNow=!!(await readImage(disableBannersUrl));}catch(e){disableNow=false;}
+      let disableNow=await disableP;
       if(disableNow!==bannersDisabled){
         bannersDisabled=disableNow;
         const wrapEl=root.closest('.baruki-banner-wrap')||root;
@@ -6305,10 +6340,10 @@ function fecharConfiguracoesBaruki(){
           restart();
         }
       }
-      if(bannersDisabled)return;
+      if(bannersDisabled){bannersP.then(r=>r.forEach(i=>{if(i&&i.objectUrl)URL.revokeObjectURL(i.objectUrl);})).catch(()=>{});return;}
 
       // BANNERS: a cada ciclo, só permanecem os links que realmente carregam imagem.
-      const results=await Promise.all(urls.map(url=>readBanner(url)));
+      const results=await bannersP;
       const valid=results.filter(Boolean);
       const previous=[...banners];
       const currentUrl=previous[index]?.url||null;
@@ -6360,7 +6395,10 @@ function fecharConfiguracoesBaruki(){
         root.style.display='block';
         paint();
       }
-    }finally{busy=false;}
+    }finally{
+      busy=false;
+      if(!primeiraCargaFeita){primeiraCargaFeita=true;if(window.BarukiPrioridade)window.BarukiPrioridade.bannersProntos();}
+    }
   }
 
   root.addEventListener('mouseenter',()=>{if(rotateTimer)clearInterval(rotateTimer);});
@@ -8136,6 +8174,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharAvisoS
 
   // Esta rotina é independente do login/tela de manutenção.
   const linkImagemAviso='https://www.socialcreator.com/srv/imgs/seccs/335022_ico.png?ts=1794022041';
+  let sinalizado=false;
+  function sinalPrioridade(){if(sinalizado)return;sinalizado=true;if(window.BarukiPrioridade)window.BarukiPrioridade.avisoPronto();}
   let verificando=false;
   let fechadoEnquantoAtivo=false;
 
@@ -8159,12 +8199,14 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharAvisoS
 
     const teste=new Image();
     teste.onload=function(){
+      sinalPrioridade();
       if(!fechadoEnquantoAtivo){
         abrirAviso(teste.src);
       }
       verificando=false;
     };
     teste.onerror=function(){
+      sinalPrioridade();
       // Link sem imagem ativa: esconde somente este aviso e permite nova ativação futura.
       fechadoEnquantoAtivo=false;
       fecharAviso();
@@ -8179,8 +8221,11 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharAvisoS
     if(!document.hidden)verificarImagemAviso();
   });
 
-  verificarImagemAviso();
-  setInterval(verificarImagemAviso,5000);
+  // Prioridade: 1º manutenção, 2º banners, 3º este aviso.
+  (window.BarukiPrioridade?window.BarukiPrioridade.banners:Promise.resolve()).then(function(){
+    verificarImagemAviso();
+    setInterval(verificarImagemAviso,5000);
+  });
 })();
 </script>
 
@@ -8255,6 +8300,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharAvisoS
 
   // Segunda verificação independente: consulta o link a cada 5 segundos.
   const linkImagemAviso='https://www.socialcreator.com/srv/imgs/seccs/335086_ico.png?ts=1794094780';
+  let sinalizado=false;
+  function sinalPrioridade(){if(sinalizado)return;sinalizado=true;if(window.BarukiPrioridade)window.BarukiPrioridade.avisoPronto();}
   let verificando=false;
   let fechadoEnquantoAtivo=false;
 
@@ -8278,11 +8325,13 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharAvisoS
     const teste=new Image();
 
     teste.onload=function(){
+      sinalPrioridade();
       if(!fechadoEnquantoAtivo)abrirAviso(teste.src);
       verificando=false;
     };
 
     teste.onerror=function(){
+      sinalPrioridade();
       fechadoEnquantoAtivo=false;
       fecharAviso();
       imagem.removeAttribute('src');
@@ -8296,8 +8345,11 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharAvisoS
     if(!document.hidden)verificarImagemAviso();
   });
 
-  verificarImagemAviso();
-  setInterval(verificarImagemAviso,5000);
+  // Prioridade: 1º manutenção, 2º banners, 3º este aviso.
+  (window.BarukiPrioridade?window.BarukiPrioridade.banners:Promise.resolve()).then(function(){
+    verificarImagemAviso();
+    setInterval(verificarImagemAviso,5000);
+  });
 })();
 </script>
 
@@ -8428,7 +8480,10 @@ body.nat-on{padding-top:14px!important;padding-left:14px!important;padding-right
     document.addEventListener('visibilitychange',function(){ if(!document.hidden) verificar(); });
     window.addEventListener('online',verificar);
   }
-  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',iniciar):iniciar();
+  // Prioridade: o modo natal é o ÚLTIMO a iniciar (depois do banner de rodapé).
+  (window.BarukiPrioridade?window.BarukiPrioridade.rodape:Promise.resolve()).then(function(){
+    document.readyState==='loading'?document.addEventListener('DOMContentLoaded',iniciar):iniciar();
+  });
 })();
 </script>
 <!-- =================== FIM DAS LUZES DE NATAL BARUKI =================== -->
@@ -8459,7 +8514,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
   if(!box||!img)return;
   const LINK="https://www.socialcreator.com/srv/imgs/seccs/335147_ico.png?ts=1794150505";
   const DURACAO=10000; // 10 segundos na tela
-  let visivel=false, busy=false, jaMostrou=false, eraAberta=null, objUrl=null, hideTimer=null, fimTimer=null;
+  let liberado=false, visivel=false, busy=false, jaMostrou=false, eraAberta=null, objUrl=null, hideTimer=null, fimTimer=null;
 
   // Mesma regra do cabeçalho da loja (status remoto tem prioridade; senão terça a sábado, 18:00 às 22:30).
   function lojaAberta(){
@@ -8528,7 +8583,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
     },1800);
   }
   async function ciclo(){
-    if(busy||document.hidden)return;
+    if(!liberado||busy||document.hidden)return;
     busy=true;
     try{
       const aberta=lojaAberta();
@@ -8550,8 +8605,13 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
   }
   window.addEventListener('resize',()=>{if(visivel)medir();});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)ciclo();});
-  ciclo();
-  setInterval(ciclo,5000);
+  // Prioridade: este banner é o 4º (depois dos avisos); ao fim da 1ª verificação libera o modo natal.
+  function rodapeFeito(){if(window.BarukiPrioridade)window.BarukiPrioridade.rodapePronto();}
+  (window.BarukiPrioridade?window.BarukiPrioridade.avisos:Promise.resolve()).then(function(){
+    liberado=true;
+    ciclo().then(rodapeFeito,rodapeFeito);
+    setInterval(ciclo,5000);
+  });
 })();
 </script>
 <script id="baruki-planilha">
