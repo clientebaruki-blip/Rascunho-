@@ -2052,6 +2052,220 @@ html.baruki-banners-pendente #barukiAvisoImagemRemoto,html.baruki-banners-penden
     </div>
   </div>
 </div>
+<!-- ===== PAINEL DE CONTROLE: lê a aba "Controle" da planilha e liga/desliga cada recurso (bloco adicionado) ===== -->
+<style id="baruki-controle-style">
+html.ctl-aviso1-off #barukiAvisoImagemRemoto,
+html.ctl-aviso2-off #barukiSegundoAvisoImagemRemoto{display:none!important}
+html.ctl-banners-off .baruki-banner-wrap{display:none!important}
+html.ctl-sobe-off #barukiRodapeBanner,html.ctl-sobe-off #barukiRodapeEspaco{display:none!important}
+html.ctl-sobe-off body.baruki-rodape-ativo nav.bottom{transform:none!important}
+html.ctl-logo-off #categories .cat .category-image{display:none!important}
+html.ctl-logo-off #categories .cat{min-height:52px!important}
+html.ctl-natal-off .nat-frame{display:none!important}
+html.ctl-natal-off body.nat-on{padding-top:0!important;padding-left:0!important;padding-right:0!important}
+#categories .cat .cat-emoji{display:flex!important;align-items:center;justify-content:center;font-size:44px;line-height:1;background:#111!important}
+@media(max-width:600px){#categories .cat .cat-emoji{font-size:38px}}
+</style>
+<script id="baruki-controle-script">
+/* Aba "Controle" da mesma planilha do cardápio. Colunas: RECURSO | STATUS | SITUAÇÃO | CHAVE.
+   STATUS = ATIVADO / DESATIVADO. Cada chave age só no seu recurso.
+   Se a aba não carregar, nada muda: o site segue como está (usa o último estado salvo no aparelho). */
+(function(){
+  'use strict';
+  var SHEET_ID='1I09bnK7a1zyzK-VAtBt_Oe62Dc_ENhi8lSUOS0qQzIw';
+  var SHEET_TAB='Controle';
+  var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
+  var CACHE_KEY='baruki_controle_cache_v1';
+  var KEYS=['loja','aviso_1','aviso_2','banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','natal','manutencao','logo_categorias','banner_sobe','promocao','atualizar_site'];
+  var state={},last='',busy=false,manutApplied=null,remoteStatus=null,R=document.documentElement;
+
+  function plain(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toUpperCase();}
+  function parseCSV(t){
+    var rows=[],row=[],cur='',q=false,i,c;
+    for(i=0;i<t.length;i++){c=t[i];
+      if(q){if(c==='"'){if(t[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=c;}
+      else if(c==='"')q=true;
+      else if(c===','){row.push(cur);cur='';}
+      else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';}
+      else if(c!=='\r')cur+=c;
+    }
+    if(cur!==''||row.length){row.push(cur);rows.push(row);}
+    return rows;
+  }
+  /* ===== Agenda AUTOMÁTICO calculada aqui, no horário de Brasília =====
+     (não depende do recálculo da planilha nem do fuso configurado nela) */
+  function brNow(){
+    var p={};
+    try{
+      new Intl.DateTimeFormat('en-US',{timeZone:'America/Sao_Paulo',hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',weekday:'short'})
+        .formatToParts(new Date()).forEach(function(x){p[x.type]=x.value;});
+    }catch(e){var d=new Date();p={year:d.getFullYear(),month:d.getMonth()+1,day:d.getDate(),hour:d.getHours(),minute:d.getMinutes(),weekday:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]};}
+    var wd={Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6,Sun:7}[p.weekday]||1;
+    return {y:+p.year,m:+p.month,d:+p.day,min:(+p.hour%24)*60+(+p.minute),wd:wd};
+  }
+  function parseTime(v){
+    var m=String(v==null?'':v).trim().match(/^(\d{1,2})(?:[:hH](\d{2}))?(?::\d{2})?\s*([AaPp][Mm])?$/);
+    if(!m)return null;
+    var h=+m[1],mi=+(m[2]||0),ap=(m[3]||'').toUpperCase();
+    if(ap==='PM'&&h<12)h+=12;if(ap==='AM'&&h===12)h=0;
+    if(h>24||mi>59)return null;
+    return (h%24)*60+mi;
+  }
+  function parseDate(v){
+    var t=String(v==null?'':v).trim(),m;
+    if((m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/))){var y=+m[3];if(y<100)y+=2000;return new Date(Date.UTC(y,+m[2]-1,+m[1]));}
+    if((m=t.match(/^(\d{4})-(\d{2})-(\d{2})/)))return new Date(Date.UTC(+m[1],+m[2]-1,+m[3]));
+    return null;
+  }
+  function autoState(r,c){
+    var abre=parseTime(r[c.abre]),fecha=parseTime(r[c.fecha]);
+    var n=brNow(),opDay=Date.UTC(n.y,n.m-1,n.d),wd=n.wd;
+    if(abre!==null&&fecha!==null&&abre>fecha&&n.min<fecha){opDay-=86400000;wd=wd===1?7:wd-1;} /* madrugada ainda é o "dia" anterior */
+    var di=parseDate(r[c.ini]),df=parseDate(r[c.fim]);
+    if(di&&opDay<di.getTime())return false;
+    if(df&&opDay>df.getTime())return false;
+    var ov=plain(r[c.dias0+wd-1]);
+    if(ov==='ATIVADO')return true;
+    if(ov==='DESATIVADO')return false;
+    if(abre===null||fecha===null)return undefined; /* sem horário: vale a regra padrão do site */
+    var g=plain(r[c.preset]);
+    var okDia=g===''||g==='TODOS OS DIAS'||(g==='SEG A SEX'&&wd<=5)||(g==='TER A SAB'&&wd>=2&&wd<=6)||(g==='SEG A SAB'&&wd<=6)||(g==='SAB E DOM'&&wd>=6);
+    if(!okDia)return false;
+    return abre<fecha?(n.min>=abre&&n.min<fecha):(n.min>=abre||n.min<fecha);
+  }
+  function findCols(rows){
+    var c={status:1,abre:4,fecha:5,preset:6,final:7,dias0:9,ini:16,fim:17,known:false};
+    for(var i=0;i<rows.length;i++){
+      var h=rows[i].map(plain);
+      if(h.indexOf('CHAVE')>-1&&h.indexOf('STATUS')>-1){
+        c.status=h.indexOf('STATUS');
+        if(h.indexOf('ABRE')>-1)c.abre=h.indexOf('ABRE');
+        if(h.indexOf('FECHA')>-1)c.fecha=h.indexOf('FECHA');
+        if(h.indexOf('DIAS')>-1)c.preset=h.indexOf('DIAS');
+        if(h.indexOf('STATUS FINAL')>-1)c.final=h.indexOf('STATUS FINAL');
+        if(h.indexOf('SEG')>-1)c.dias0=h.indexOf('SEG');
+        if(h.indexOf('DATA INICIO')>-1)c.ini=h.indexOf('DATA INICIO');
+        if(h.indexOf('DATA FIM')>-1)c.fim=h.indexOf('DATA FIM');
+        c.known=true;break;
+      }
+    }
+    return c;
+  }
+  function boolOf(t){
+    t=plain(t);
+    if(t==='ATIVADO'||t==='ATIVADA'||t==='ATIVO'||t==='ON'||t==='SIM'||t==='LIGADO')return true;
+    if(t==='DESATIVADO'||t==='DESATIVADA'||t==='INATIVO'||t==='OFF'||t==='NAO'||t==='DESLIGADO')return false;
+    return undefined;
+  }
+  function parseState(csv){
+    var out={},n=0,rows=parseCSV(csv),c=findCols(rows);
+    rows.forEach(function(r){
+      var k=null,v,i,t;
+      for(i=0;i<r.length&&k===null;i++){t=String(r[i]||'').trim().toLowerCase();if(KEYS.indexOf(t)>-1)k=t;}
+      if(k===null||typeof out[k]==='boolean')return;
+      v=boolOf(r[c.status]);
+      if(v===undefined&&plain(r[c.status])==='AUTOMATICO'){
+        try{v=autoState(r,c);}catch(e){v=undefined;}
+        if(v===undefined)v=boolOf(r[c.final]); /* sem horário: usa o STATUS FINAL que a planilha calculou */
+      }
+      if(v===undefined&&plain(r[c.status])==='')v=boolOf(r[c.final]);
+      if(typeof v==='boolean'){out[k]=v;n++;}
+    });
+    return n>=4?out:null; /* proteção: aba ausente/incompleta não muda nada */
+  }
+  function has(k){return typeof state[k]==='boolean';}
+
+  /* API usada pelos pontos de ligação nos blocos existentes */
+  window.BarukiControle={
+    has:has,
+    get:function(k){return has(k)?state[k]:null;},
+    bannerOff:function(i){return state.banners===false||state['banner_'+(i+1)]===false;},
+    manutOff:function(){return state.manutencao===false;},
+    promoOff:function(){return state.promocao===false;},
+    reload:function(){busy=false;load();},
+    all:function(){return Object.assign({},state);}
+  };
+
+  /* LOJA: ATIVADO = aberta, DESATIVADO = fechada. Sem valor na planilha, vale a regra de antes (links remotos / horário). */
+  try{
+    Object.defineProperty(window,'BarukiRemoteStoreStatus',{configurable:true,enumerable:true,
+      get:function(){return typeof state.loja==='boolean'?state.loja:remoteStatus;},
+      set:function(v){remoteStatus=v;}});
+  }catch(e){console.warn('[Controle] loja:',e);}
+
+  function natal(on){
+    if(!document.body)return false;
+    var f=document.querySelector('.nat-frame');
+    if(on){
+      if(!f){f=document.createElement('div');f.className='nat-frame';f.setAttribute('aria-hidden','true');f.innerHTML='<i class="t"></i><i class="l"></i><i class="r"></i>';document.body.appendChild(f);}
+      document.body.classList.add('nat-on');
+    }else{
+      if(f&&f.parentNode)f.parentNode.removeChild(f);
+      document.body.classList.remove('nat-on');
+    }
+    return true;
+  }
+  function manut(){
+    var v=state.manutencao;
+    if(typeof v!=='boolean'||manutApplied===v||typeof window.testeManutencao!=='function')return;
+    if(v){
+      var lib=false;try{lib=sessionStorage.getItem('baruki_manutencao_liberada')==='1';}catch(e){}
+      if(!lib)window.testeManutencao(true);   /* quem já entrou com o login de teste continua passando */
+    }else window.testeManutencao(false);
+    manutApplied=v;
+  }
+  function flag(c,off){R.classList.toggle(c,off===true);}
+
+  function apply(prev){
+    flag('ctl-aviso1-off',state.aviso_1===false);
+    flag('ctl-aviso2-off',state.aviso_2===false);
+    flag('ctl-banners-off',state.banners===false);
+    flag('ctl-sobe-off',state.banner_sobe===false);
+    flag('ctl-logo-off',state.logo_categorias===false);
+    flag('ctl-natal-off',state.natal===false);
+    if(has('natal'))natal(state.natal===true);
+    try{manut();}catch(e){console.error('[Controle] manutenção',e);}
+    if(prev){
+      if(prev.loja!==state.loja&&typeof window.updateStatus==='function'){try{window.updateStatus();}catch(e){}}
+      var bn=['banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8'].some(function(k){return prev[k]!==state[k];});
+      if(bn){try{document.dispatchEvent(new Event('visibilitychange'));}catch(e){}} /* os banners se atualizam na hora */
+    }
+  }
+  function set(next){
+    var prev=state;state=next;
+    try{apply(prev);}catch(e){console.error('[Controle] erro ao aplicar',e);}
+    try{document.dispatchEvent(new CustomEvent('baruki:controle',{detail:{prev:prev,state:next}}));}catch(e){}
+  }
+
+  try{var saved=localStorage.getItem(CACHE_KEY);if(saved){var s=JSON.parse(saved);if(s&&typeof s==='object')state=s;}}catch(e){}
+  try{apply(null);}catch(e){}
+  document.addEventListener('DOMContentLoaded',function(){try{apply(null);}catch(e){}});
+  window.addEventListener('load',function(){try{apply(null);}catch(e){}});
+
+  function load(){
+    if(busy||document.hidden)return;
+    busy=true;
+    fetch(URL_CSV+'&_='+Date.now(),{cache:'no-store'}).then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.text();
+    }).then(function(csv){
+      var n=parseState(csv);   /* sempre recalcula: o AUTOMÁTICO depende do relógio */
+      if(!n){console.warn('[Controle] aba "Controle" não encontrada ou incompleta — mantendo o estado atual.');return;}
+      var sig=JSON.stringify(n);
+      if(csv===last&&sig===JSON.stringify(state)){try{apply(null);}catch(e){}return;}
+      last=csv;
+      try{localStorage.setItem(CACHE_KEY,JSON.stringify(n));}catch(e){}
+      set(n);
+    }).catch(function(e){console.warn('[Controle] não foi possível carregar — mantendo o estado atual.',e);})
+      .then(function(){busy=false;});
+  }
+  load();
+  setInterval(load,5000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+})();
+</script>
+<!-- ===== FIM DO PAINEL DE CONTROLE ===== -->
+
 <script id="baruki-aviso-remoto-script">
 (function(){
   'use strict';
@@ -2102,6 +2316,7 @@ html.baruki-banners-pendente #barukiAvisoImagemRemoto,html.baruki-banners-penden
 
   function bloquearSite(){
     if(testeLiberado())return;
+    if(window.BarukiControle&&window.BarukiControle.manutOff())return; // planilha Controle: manutenção DESATIVADA
     raiz.classList.add('baruki-manut-ativa');
     aviso.classList.add('ativo');
     document.documentElement.style.overflow='hidden';
@@ -4476,8 +4691,10 @@ function renderCategories(){
       '<span class="promo-emoji" aria-hidden="true">🔥</span><span class="category-label">Promoção</span></button>';
     }
     const imageUrl=categoryImageUrl(c[0]);
+    const emoji=String(c[1]).split(' ')[0];
+    const media=imageUrl?'<img class="category-image" src="'+imageUrl+'" alt="" loading="eager">':'<span class="category-image cat-emoji" aria-hidden="true">'+emoji+'</span>';
     return '<button type="button" class="cat '+(c[0]===currentCategory?'active':'')+'" onclick="selectCategory(\''+c[0]+'\')">'+
-    '<img class="category-image" src="'+imageUrl+'" alt="" loading="eager"><span class="category-label">'+c[1].replace(/^[^ ]+\s/,'')+'</span></button>';
+    media+'<span class="category-label">'+safeText(String(c[1]).replace(/^[^ ]+\s/,''))+'</span></button>';
   }).join('');
 }
 
@@ -4554,7 +4771,7 @@ function renderSearchResults(query, box){
   const q=normalize(query);
   const catNames={lanches:'lanches hamburguer',porcoes:'porcoes batata frita',pastel:'pastel pasteis',bebidas:'bebidas agua refrigerante cerveja',pizzas:'pizza pizzas',cachorro:'cachorro quente cachorrao',promocao:'promocao promocoes oferta combo'};
   const matches=products.filter(p=>{
-    const text=[p.name,p.desc,p.cat,p.group,catNames[p.cat],...(Array.isArray(p.ingredients)?p.ingredients:[])].join(' ');
+    const text=[p.name,p.desc,p.cat,p.group,catNames[p.cat]||(window.barukiCatLabel?window.barukiCatLabel(p.cat):''),...(Array.isArray(p.ingredients)?p.ingredients:[])].join(' ');
     return normalize(text).includes(q);
   });
   box.classList.toggle('pizza-view',matches.some(p=>['pizzas','pastel','bebidas'].includes(p.cat)));
@@ -4567,7 +4784,7 @@ function renderSearchResults(query, box){
     else if(Number(p.price)>0) price=money(p.price);
     const action=isTwo?'pendingCardQty.pizza2sabores=getCardQty(\'pizza2sabores\');showPizzaTwoFlavors()':('addFromProductCard(\''+String(p.id).replace(/\'/g,"\'")+ '\')');
     const label=isTwo?'MONTAR PIZZA':(Number(p.price)>0||p.sizePrices?'ADICIONAR':'VER OPÇÕES');
-    const category=({lanches:'🍔 Lanches',porcoes:'🍟 Porções',pastel:'🥟 Pastéis',bebidas:'🥤 Bebidas',pizzas:'🍕 Pizzas',cachorro:'🌭 Cachorrão'})[p.cat]||'Cardápio';
+    const category=({lanches:'🍔 Lanches',porcoes:'🍟 Porções',pastel:'🥟 Pastéis',bebidas:'🥤 Bebidas',pizzas:'🍕 Pizzas',cachorro:'🌭 Cachorrão',promocao:'🔥 Promoção'})[p.cat]||(window.barukiCatLabel&&window.barukiCatLabel(p.cat))||'Cardápio';
     return '<article class="product baruki-search-product"><div class="baruki-product-category">'+category+(p.group?' · '+safeText(p.group):'')+'</div><h3>'+safeText(p.name)+'</h3><div class="desc">'+safeText(p.desc||'')+'</div><div class="price">'+price+'</div><div class="product-card-actions">'+productCardQty(p.id)+'<button class="add" onclick="'+action+'">'+label+'</button></div></article>';
   }).join('');
 }
@@ -5362,7 +5579,7 @@ function initializeBaruki(){
     barukiTask('produtos',()=>renderProducts());
     barukiTask('pedidos',()=>renderOrders());
     barukiTask('cronômetro de preparo',()=>startPrepTimer());
-    barukiTask('checkout',()=>{enhanceCheckout();updateCheckout()});
+    barukiTask('checkout',()=>{if(typeof enhanceCheckout==='function')enhanceCheckout();updateCheckout()});
     barukiTask('status',()=>{updateStatus()});
     // Sempre entra no cardápio em estado limpo, sem deixar uma tela antiga ativa.
     barukiTask('tela inicial',()=>{
@@ -6500,7 +6717,7 @@ function fecharConfiguracoesBaruki(){
 
       // BANNERS: a cada ciclo, só permanecem os links que realmente carregam imagem.
       const results=await bannersP;
-      const valid=results.filter(Boolean);
+      const valid=results.filter((item,i)=>item&&!(window.BarukiControle&&window.BarukiControle.bannerOff(i))); // planilha Controle
       const previous=[...banners];
       const currentUrl=previous[index]?.url||null;
       const next=[];
@@ -8587,7 +8804,7 @@ body.nat-on{padding-top:14px!important;padding-left:14px!important;padding-right
 (function(){
   /* ---- CONFIGURAÇÃO ---- */
   var NATAL={
-    ativo:true,   /* chave geral: false = desliga o recurso por completo */
+    ativo:!(window.BarukiControle&&window.BarukiControle.has('natal')),   /* chave geral: false = desliga o recurso por completo (a planilha Controle assume quando tem a chave natal) */
     url:'https://www.socialcreator.com/srv/imgs/seccs/335122_ico.png?ts=1794118495', /* imagem "gatilho" */
     intervalo:5000 /* verifica a cada 5 segundos */
   };
@@ -8778,7 +8995,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    Se a planilha não carregar, o cardápio atual continua funcionando.
    ========================================================= */
 (function(){
-  var SHEET_ID='1EWPe-6Hb-MQA1Nf0usgP3E4DPjN_LRFtZYT0SK2-k80';
+  var SHEET_ID='1I09bnK7a1zyzK-VAtBt_Oe62Dc_ENhi8lSUOS0qQzIw';
   var SHEET_TAB='Cardápio';
   var SHEET_URL='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
   var CACHE_KEY='baruki_planilha_cache_v3';
@@ -8792,6 +9009,14 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
     if(/past/.test(n))return {cat:'pastel',hint:/doce/.test(n)?'Doce':/especia/.test(n)?'Super Especial':/dois/.test(n)?'Dois Sabores':/simples/.test(n)?'Simples':''};
     return {cat:undefined,hint:''};
   }
+  /* ===== Categorias novas criadas na planilha (aparecem sozinhas no site) ===== */
+  var DYN={};   /* slug -> rótulo "😀 Nome" */
+  function dynLabel(raw){
+    var t=String(raw||'').replace(/\s+/g,' ').trim(),m=t.match(/^((?:\p{Extended_Pictographic}[\uFE0F\u200D]*)+)\s*(.*)$/u);
+    return m?{emoji:m[1],name:m[2]||t}:{emoji:'',name:t};
+  }
+  function dynSlug(name){return 'x_'+plain(name).toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');}
+  window.barukiCatLabel=function(slug){return DYN[slug]||'';};
   function plain(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
   function norm(s){return plain(s).replace(/\s+/g,' ').trim().toUpperCase();}
   function key(cat,name){return cat+'|'+plain(name).toUpperCase().replace(/[^A-Z0-9]/g,'');}
@@ -8846,14 +9071,21 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
     var parsed=[];
     for(var r=1;r<rows.length;r++){
       var x=rows[r],name=String(x[col.name]||'').trim();
-      var rc=resolveCat(x[col.cat]),cat=rc.cat;
-      if(!name||!cat)continue;
-      parsed.push({name:name,cat:cat,price:parseMoney(x[col.price]),
+      var rc=resolveCat(x[col.cat]),cat=rc.cat,dl=null;
+      if(!name)continue;
+      if(!cat){
+        dl=dynLabel(x[col.cat]);
+        if(!dl.name)continue;
+        cat=dynSlug(dl.name);
+        if(cat==='x_')continue;
+      }
+      parsed.push({dl:dl,raw:String(x[col.cat]||'').trim(),name:name,cat:cat,price:parseMoney(x[col.price]),
         priceG:col.priceG!=null?parseMoney(x[col.priceG]):0,
         ing:col.ing!=null?String(x[col.ing]||'').trim():'',
         desc:col.desc!=null?String(x[col.desc]||'').trim():'',
         oldPrice:col.oldPrice!=null?parseMoney(x[col.oldPrice]):0,
         on:col.active==null?true:isOn(x[col.active]),
+        off:col.active!=null&&['NAO','N','0','FALSE','FALSO','INATIVA','INATIVO'].indexOf(norm(x[col.active]))>-1,
         grp:(col.grp!=null?String(x[col.grp]||'').trim():'')||rc.hint});
     }
     if(parsed.length<10)return false; // proteção: planilha vazia/incompleta não apaga o cardápio
@@ -8862,14 +9094,36 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
     var added=0;
     // PROMOÇÕES: refeitas a cada leitura. Linha com Categoria "Promoção" e Ativa = SIM entra;
     // se nenhuma estiver ativa, a categoria some e o cardápio segue normal.
-    for(var k=products.length-1;k>=0;k--){if(products[k].cat==='promocao')products.splice(k,1);}
+    var promoOff=false;try{promoOff=!!(window.BarukiControle&&window.BarukiControle.promoOff());}catch(e){}
+    for(var k=products.length-1;k>=0;k--){if(products[k].cat==='promocao'||String(products[k].cat).indexOf('x_')===0)products.splice(k,1);}
     parsed.forEach(function(d,n){
-      if(d.cat!=='promocao'||!d.on||!(d.price>0))return;
+      if(promoOff||d.cat!=='promocao'||!d.on||!(d.price>0))return;
       products.push({id:'promo_'+n+'_'+key('',d.name).slice(1,12),cat:'promocao',name:d.name,price:d.price,oldPrice:d.oldPrice,
         desc:d.desc||d.ing,ingredients:[],group:'',sizePrices:false});
     });
+    /* categorias novas: refeitas a cada leitura, na ordem em que aparecem na planilha */
+    for(var q=categories.length-1;q>=0;q--){if(String(categories[q][0]).indexOf('x_')===0)categories.splice(q,1);}
+    DYN={};var dupe={};
     parsed.forEach(function(d){
-      if(d.cat==='promocao')return;
+      if(d.cat.indexOf('x_')!==0||!d.dl)return;
+      var emo=d.dl.emoji;
+      if(!DYN[d.cat]){DYN[d.cat]={emoji:emo,name:d.dl.name};}
+      else if(!DYN[d.cat].emoji&&emo)DYN[d.cat].emoji=emo;
+    });
+    parsed.forEach(function(d){
+      if(d.cat.indexOf('x_')!==0||!d.dl||d.off||!(d.price>=0))return;
+      if(!DYN[d.cat].emoji){var m=d.name.match(/^((?:\p{Extended_Pictographic}[\uFE0F\u200D]*)+)/u);if(m)DYN[d.cat].emoji=m[1];}
+      var kk=key(d.cat,d.name);dupe[kk]=(dupe[kk]||0)+1;
+      products.push({id:'planilha_'+d.cat+'_'+kk.split('|')[1].slice(0,24)+(dupe[kk]>1?'_'+dupe[kk]:''),cat:d.cat,name:d.name,price:d.price,
+        desc:d.desc,ingredients:splitIngredients(d.ing),group:'',sizePrices:false});
+    });
+    Object.keys(DYN).forEach(function(slug){
+      if(!products.some(function(p){return p.cat===slug;})){delete DYN[slug];return;}
+      DYN[slug]=(DYN[slug].emoji||'🍽️')+' '+DYN[slug].name;
+      categories.push([slug,DYN[slug]]);
+    });
+    parsed.forEach(function(d){
+      if(d.cat==='promocao'||d.cat.indexOf('x_')===0)return;
       var p=byKey[key(d.cat,d.name)];
       if(!p){
         // produto novo: só entra onde não precisa de grupo (lanches, cachorrão, porções)
@@ -8902,7 +9156,18 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
       renderCategories();
     }catch(e){console.error('[Planilha] erro na categoria de promoção',e);}
   }
+  var catSig='';
+  function syncCategories(){
+    try{
+      var sig=categories.map(function(c){return c[0]+c[1];}).join('|');
+      if(sig===catSig)return;
+      catSig=sig;
+      if(currentCategory.indexOf('x_')===0&&!categories.some(function(c){return c[0]===currentCategory;}))currentCategory='lanches';
+      renderCategories();
+    }catch(e){console.error('[Planilha] erro nas categorias',e);}
+  }
   function refresh(){
+    syncCategories();
     syncPromoCategory();
     try{
       var menu=document.getElementById('menu');
@@ -8942,6 +9207,12 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
   load();
   setInterval(load,5000);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+  /* a chave "Promoções (geral)" da aba Controle liga/desliga as promoções na hora */
+  document.addEventListener('baruki:controle',function(ev){
+    var a=ev.detail&&ev.detail.prev,b=ev.detail&&ev.detail.state;
+    if(!last||!a||!b||a.promocao===b.promocao)return;
+    try{if(apply(last))refresh();}catch(e){console.error('[Planilha] promoção',e);}
+  });
 })();
 </script>
 <!-- PROMOÇÃO no novo modelo (adicionado): aparece dentro da categoria Promoção -->
@@ -9051,6 +9322,94 @@ background:linear-gradient(135deg,#ff9d00 0%,#ff6a00 45%,#f32618 100%);box-shado
   var c=document.getElementById('categories');
   if(c)new MutationObserver(wrap).observe(c,{childList:true});
   wrap();setInterval(wrap,2000);
+})();
+</script>
+
+<!-- ===== PAINEL DO DONO (abre só com #painel no endereço) ===== -->
+<style id="baruki-painel-style">
+#barukiPainel{position:fixed;inset:0;z-index:2147483000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#barukiPainel.on{display:flex}
+#barukiPainel .bp-box{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:#141414;color:#fff;border:1px solid #3a3a3a;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.6);font-family:inherit}
+#barukiPainel .bp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+#barukiPainel h2{margin:0;font-size:20px;font-weight:900}
+#barukiPainel .bp-x{border:0;background:#2a2a2a;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer}
+#barukiPainel .bp-sub{color:#a3a3a3;font-size:13px;margin:0 0 14px}
+#barukiPainel .bp-item{background:#1d1d1d;border:1px solid #2f2f2f;border-radius:16px;padding:12px;margin-bottom:10px}
+#barukiPainel .bp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+#barukiPainel .bp-name{font-weight:800;font-size:15px}
+#barukiPainel .bp-now{font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#333;color:#ccc}
+#barukiPainel .bp-now.on{background:#14532d;color:#86efac}#barukiPainel .bp-now.off{background:#7f1d1d;color:#fecaca}
+#barukiPainel .bp-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#barukiPainel .bp-btn{border:2px solid #3a3a3a;background:#262626;color:#fff;border-radius:12px;padding:12px 4px;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit;min-height:46px}
+#barukiPainel .bp-btn:active{transform:scale(.97)}
+#barukiPainel .bp-btn[data-s="ATIVADO"]{border-color:#16a34a}#barukiPainel .bp-btn[data-s="DESATIVADO"]{border-color:#dc2626}#barukiPainel .bp-btn[data-s="AUTOMÁTICO"]{border-color:#2563eb}
+#barukiPainel .bp-btn[disabled]{opacity:.55}
+#barukiPainel .bp-msg{min-height:20px;font-size:13px;font-weight:700;margin:6px 2px 0;color:#a3a3a3}
+#barukiPainel .bp-msg.ok{color:#86efac}#barukiPainel .bp-msg.err{color:#fca5a5}
+#barukiPainel .bp-link{background:none;border:0;color:#9ca3af;text-decoration:underline;font-size:12px;cursor:pointer;padding:8px 0;font-family:inherit}
+</style>
+<script id="baruki-painel-script">
+(function(){
+  'use strict';
+  /* Cole aqui o endereço do Apps Script (veja o arquivo apps_script_painel.gs). Vazio = painel só mostra o estado. */
+  var APPS_SCRIPT_URL='';
+  var ITENS=[['loja','🏪 Loja (aberta / fechada)'],['promocao','🔥 Promoções'],['banners','🖼️ Banners'],['natal','🎄 Função Natal'],['manutencao','🛠️ Manutenção']];
+  var KEY_STORE='baruki_painel_chave',box=null,msg=null;
+
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function getKey(ask){
+    var k='';try{k=localStorage.getItem(KEY_STORE)||'';}catch(e){}
+    if(!k&&ask){k=(window.prompt('Digite a senha do painel:')||'').trim();if(k){try{localStorage.setItem(KEY_STORE,k);}catch(e){}}}
+    return k;
+  }
+  function say(t,cls){if(msg){msg.textContent=t||'';msg.className='bp-msg'+(cls?' '+cls:'');}}
+  function draw(){
+    if(!box)return;
+    var st=(window.BarukiControle&&window.BarukiControle.all&&window.BarukiControle.all())||{};
+    box.querySelector('.bp-list').innerHTML=ITENS.map(function(it){
+      var v=st[it[0]],cls=v===true?'on':v===false?'off':'',txt=v===true?'LIGADO':v===false?'DESLIGADO':'PADRÃO DO SITE';
+      return '<div class="bp-item"><div class="bp-row"><span class="bp-name">'+esc(it[1])+'</span><span class="bp-now '+cls+'">'+txt+'</span></div>'+
+        '<div class="bp-btns">'+['ATIVADO','DESATIVADO','AUTOMÁTICO'].map(function(s){
+          return '<button type="button" class="bp-btn" data-k="'+it[0]+'" data-s="'+s+'">'+(s==='ATIVADO'?'LIGAR':s==='DESATIVADO'?'DESLIGAR':'AUTOMÁTICO')+'</button>';
+        }).join('')+'</div></div>';
+    }).join('');
+  }
+  function send(chave,status,btn){
+    if(!APPS_SCRIPT_URL){say('Falta ligar o painel à planilha (veja o arquivo apps_script_painel.gs).','err');return;}
+    var key=getKey(true);if(!key){say('Senha não informada.','err');return;}
+    var all=box.querySelectorAll('.bp-btn');all.forEach(function(b){b.disabled=true;});
+    say('Salvando...');
+    fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:key,chave:chave,status:status})})
+      .then(function(r){return r.json();})
+      .then(function(j){
+        if(j&&j.ok){say('Salvo ✔ — o site atualiza em instantes.','ok');try{window.BarukiControle.reload();}catch(e){}setTimeout(draw,1800);setTimeout(draw,6000);}
+        else{if(j&&/senha/i.test(j.erro||'')){try{localStorage.removeItem(KEY_STORE);}catch(e){}}say((j&&j.erro)||'Não foi possível salvar.','err');}
+      })
+      .catch(function(){say('Sem conexão com a planilha. Tente de novo.','err');})
+      .then(function(){all.forEach(function(b){b.disabled=false;});});
+  }
+  function build(){
+    if(box)return;
+    box=document.createElement('div');box.id='barukiPainel';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label','Painel do dono');
+    box.innerHTML='<div class="bp-box"><div class="bp-top"><h2>⚙️ Painel do dono</h2><button type="button" class="bp-x" aria-label="Fechar">✕</button></div>'+
+      '<p class="bp-sub">Um toque e a planilha é atualizada. O site segue em até 5 segundos.</p><div class="bp-list"></div><div class="bp-msg" aria-live="polite"></div>'+
+      '<button type="button" class="bp-link" data-act="senha">Trocar senha deste aparelho</button></div>';
+    document.body.appendChild(box);
+    msg=box.querySelector('.bp-msg');
+    box.addEventListener('click',function(e){
+      var t=e.target;
+      if(t===box||t.closest('.bp-x')){close();return;}
+      var b=t.closest('.bp-btn');if(b){send(b.getAttribute('data-k'),b.getAttribute('data-s'),b);return;}
+      if(t.closest('[data-act="senha"]')){try{localStorage.removeItem(KEY_STORE);}catch(x){}say('Senha apagada. Será pedida de novo no próximo toque.');}
+    });
+    document.addEventListener('baruki:controle',draw);
+  }
+  function open(){build();draw();box.classList.add('on');document.documentElement.style.overflow='hidden';if(!APPS_SCRIPT_URL)say('Painel em modo leitura: falta colar o endereço do Apps Script.');else say('');}
+  function close(){if(box)box.classList.remove('on');document.documentElement.style.overflow='';if(location.hash==='#painel'){try{history.replaceState(null,'',location.pathname+location.search);}catch(e){location.hash='';}}}
+  function check(){if(location.hash==='#painel')open();}
+  window.addEventListener('hashchange',check);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',check);else check();
 })();
 </script>
 </body>
