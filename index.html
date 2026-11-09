@@ -1873,6 +1873,154 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 #categories .cat{box-sizing:border-box!important;}
 #categories .cat:active{transform:none!important;}
 </style>
+<style id="baruki-numero-fundo-igual">
+/* Ajuste autorizado: campo Número com o mesmo fundo dos outros campos (remove o fundo azulado do autofill do navegador). */
+#addressNumber:-webkit-autofill,
+#addressNumber:-webkit-autofill:hover,
+#addressNumber:-webkit-autofill:focus,
+#addressNumber:autofill{
+  -webkit-text-fill-color:#fff !important;
+  caret-color:#fff;
+  transition:background-color 600000s 0s, color 600000s 0s !important;
+}
+</style>
+<style id="pizza2-visual-estiloso">
+/* Ajuste autorizado: somente o visual da tela "Monte sua Pizza G". Nenhuma função, texto ou lógica foi alterada. */
+body:not(.day-theme) .pizza2-page .pizza2-top{
+  background:
+    radial-gradient(circle at 88% 8%,rgba(255,150,50,.38),transparent 42%),
+    radial-gradient(circle at 6% 100%,rgba(255,90,0,.22),transparent 48%),
+    linear-gradient(150deg,#341a0a 0%,#1a1a1a 55%,#2a1507 100%)!important;
+  border:1px solid rgba(255,140,60,.55)!important;
+  box-shadow:0 18px 44px rgba(255,90,0,.16),0 0 0 1px rgba(255,200,120,.06) inset!important;
+}
+body:not(.day-theme) .pizza2-page .pizza2-kicker{
+  display:inline-block;padding:5px 10px;border-radius:99px;
+  background:rgba(255,107,0,.14);border:1px solid rgba(255,140,60,.35);color:#ffb070!important;
+}
+body:not(.day-theme) .pizza2-page .pizza2-icon{
+  background:linear-gradient(145deg,#ffa02e,#f04e00)!important;
+  box-shadow:0 12px 28px rgba(255,100,0,.45),inset 0 2px 0 rgba(255,255,255,.35)!important;
+  animation:pz2float 3.2s ease-in-out infinite;
+}
+@keyframes pz2float{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(3deg) translateY(-4px)}}
+body:not(.day-theme) .pizza2-page .pizza2-title-row h2{
+  background:linear-gradient(90deg,#fff 0%,#ffd9a8 60%,#ffb35c 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent;
+}
+body:not(.day-theme) .pizza2-page .pizza2-progress .step{height:9px!important;background:rgba(255,255,255,.08)!important}
+body:not(.day-theme) .pizza2-page .pizza2-progress .step.active{
+  background:linear-gradient(90deg,#ff5a00,#ffb02e)!important;box-shadow:0 0 14px rgba(255,120,0,.6)!important;
+}
+body:not(.day-theme) .pizza2-page .pizza2-progress-text{color:#d7b394!important}
+
+/* Prévia das duas metades */
+body:not(.day-theme) .pizza2-page .pizza2-half-preview{
+  background:linear-gradient(150deg,rgba(255,255,255,.07),rgba(255,255,255,.015))!important;
+  border:1px solid rgba(255,255,255,.11)!important;border-radius:20px!important;
+  backdrop-filter:blur(4px);transition:.25s;
+}
+body:not(.day-theme) .pizza2-page #pizza2Preview1{border-left:4px solid #ff6b00!important}
+body:not(.day-theme) .pizza2-page #pizza2Preview2{border-left:4px solid #ffb02e!important}
+body:not(.day-theme) .pizza2-page .pizza2-half-preview.filled{
+  border-color:rgba(0,220,100,.55)!important;
+  background:linear-gradient(150deg,rgba(0,220,100,.16),rgba(255,255,255,.02))!important;
+  box-shadow:0 8px 22px rgba(0,200,83,.14);
+}
+body:not(.day-theme) .pizza2-page .pizza2-half-icon{opacity:.3!important;font-size:30px!important;transform:rotate(12deg)}
+body:not(.day-theme) .pizza2-page .pizza2-half-name{color:#fff}
+
+/* Cartões de escolha */
+body:not(.day-theme) .pizza2-page .pizza2-choice{
+  background:linear-gradient(155deg,#242424,#151515)!important;
+  border:1px solid rgba(255,255,255,.09)!important;border-radius:22px!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.35)!important;overflow:hidden;
+}
+body:not(.day-theme) .pizza2-page .pizza2-choice:before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,#ff6b00,#ffb02e);opacity:.55;transition:.25s;
+}
+body:not(.day-theme) .pizza2-page .pizza2-choice.selected{
+  border-color:rgba(0,220,100,.5)!important;
+  box-shadow:0 12px 32px rgba(0,200,83,.12)!important;
+}
+body:not(.day-theme) .pizza2-page .pizza2-choice.selected:before{background:linear-gradient(180deg,#2eea7d,#00b85a);opacity:1}
+body:not(.day-theme) .pizza2-page .pizza2-number{
+  border-radius:14px!important;background:linear-gradient(145deg,#333,#222)!important;color:#ffb070!important;
+  border:1px solid rgba(255,140,60,.35)!important;
+}
+body:not(.day-theme) .pizza2-page .pizza2-choice.selected .pizza2-number{
+  background:linear-gradient(145deg,#2eea7d,#00a34f)!important;color:#05140b!important;border-color:transparent!important;
+  box-shadow:0 6px 16px rgba(0,200,83,.35)!important;
+}
+body:not(.day-theme) .pizza2-page .pizza2-field-label{color:#ffb070!important}
+
+/* Seletores */
+body:not(.day-theme) .pizza2-page .pizza2-select{
+  background:linear-gradient(180deg,#0e0e0e,#161616)!important;
+  border:1px solid rgba(255,255,255,.14)!important;border-radius:15px!important;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.5);
+}
+body:not(.day-theme) .pizza2-page .pizza2-select:focus{
+  border-color:#ff8a3d!important;box-shadow:0 0 0 3px rgba(255,107,0,.2),inset 0 2px 6px rgba(0,0,0,.5)!important;
+}
+body:not(.day-theme) .pizza2-page .pizza2-select-wrap:after{
+  width:28px;height:28px;right:10px!important;top:50%;transform:translateY(-50%);
+  display:grid;place-items:center;padding-bottom:6px;box-sizing:border-box;border-radius:50%;
+  background:rgba(255,107,0,.16);color:#ffa05a;
+}
+body:not(.day-theme) .pizza2-page .pizza2-selected{
+  border-radius:14px!important;background:rgba(0,0,0,.35)!important;border:1px dashed rgba(255,255,255,.16)!important;
+}
+body:not(.day-theme) .pizza2-page .pizza2-selected.has-value{
+  background:rgba(0,220,100,.1)!important;border:1px solid rgba(0,220,100,.4)!important;
+}
+
+/* Sinal de + entre as metades */
+body:not(.day-theme) .pizza2-page .pizza2-plus{height:40px!important}
+body:not(.day-theme) .pizza2-page .pizza2-plus span{
+  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;line-height:1;
+  background:linear-gradient(145deg,#ff8a2a,#e94d00);color:#fff;font-size:22px;
+  box-shadow:0 6px 18px rgba(255,100,0,.45);
+}
+body:not(.day-theme) .pizza2-page .pizza2-plus:before,
+body:not(.day-theme) .pizza2-page .pizza2-plus:after{background:linear-gradient(90deg,transparent,rgba(255,140,60,.5))}
+body:not(.day-theme) .pizza2-page .pizza2-plus:after{background:linear-gradient(270deg,transparent,rgba(255,140,60,.5))}
+
+/* Avisos, borda, total e botão */
+body:not(.day-theme) .pizza2-page .pizza2-lock,
+body:not(.day-theme) .pizza2-page .pizza2-tip{
+  background:linear-gradient(135deg,rgba(255,107,0,.12),rgba(255,176,46,.05))!important;
+  border:1px solid rgba(255,140,60,.28)!important;border-radius:16px!important;
+}
+body:not(.day-theme) .pizza2-page .pizza2-border{
+  background:linear-gradient(155deg,#222,#151515)!important;border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:22px!important;box-shadow:0 12px 30px rgba(0,0,0,.3);
+}
+body:not(.day-theme) .pizza2-page .pizza2-radio{border-radius:15px!important;transition:.2s}
+body:not(.day-theme) .pizza2-page .pizza2-radio:has(input:checked){
+  border-color:#ff8a3d!important;background:linear-gradient(135deg,rgba(255,107,0,.2),rgba(255,107,0,.05))!important;
+  box-shadow:0 6px 18px rgba(255,107,0,.15);
+}
+body:not(.day-theme) .pizza2-page .pizza2-total{
+  background:linear-gradient(155deg,#1f2a22,#121212)!important;
+  border:1px solid rgba(0,220,100,.35)!important;box-shadow:0 12px 30px rgba(0,200,83,.1)!important;
+}
+body:not(.day-theme) .pizza2-page .pizza2-total .total strong{text-shadow:0 0 16px rgba(85,237,145,.45)}
+body:not(.day-theme) .pizza2-page .pizza2-note textarea{border:1px solid rgba(255,255,255,.14)!important}
+body:not(.day-theme) .pizza2-page .pizza2-add{box-shadow:0 12px 28px rgba(255,107,0,.3)!important;letter-spacing:.4px}
+@media(prefers-reduced-motion:reduce){body:not(.day-theme) .pizza2-page .pizza2-icon{animation:none}}
+</style>
+<style id="baruki-promocao">
+/* Categoria PROMOÇÃO — só aparece quando há promoção ativa na planilha */
+#categories .cat.promo-cat{background:linear-gradient(160deg,#ff9d00,#f32618)!important;border-color:#ffd24a!important;color:#fff!important;box-shadow:0 0 0 0 rgba(255,157,0,.55);animation:barukiPromoPulse 1.8s ease-in-out infinite}
+#categories .cat.promo-cat.active{background:linear-gradient(160deg,#ffb000,#f32618)!important;border-color:#fff!important}
+#categories .cat.promo-cat .promo-emoji{display:flex!important;align-items:center;justify-content:center;width:100%;height:82px;flex:0 0 82px;font-size:48px;line-height:1;border-radius:10px;background:rgba(0,0,0,.28);filter:drop-shadow(0 0 8px rgba(255,220,80,.7))}
+#categories .cat.promo-cat .category-label{text-transform:uppercase;letter-spacing:.4px}
+@keyframes barukiPromoPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,157,0,.55)}50%{box-shadow:0 0 0 7px rgba(255,157,0,0)}}
+@media(max-width:600px){#categories .cat.promo-cat .promo-emoji{height:72px;flex-basis:72px;font-size:40px}}
+@media(prefers-reduced-motion:reduce){#categories .cat.promo-cat{animation:none}}
+</style>
 </head>
 <body>
 <!-- TELA DE MANUTENÇÃO BARUKI (no início da página para aparecer imediatamente) -->
@@ -2211,7 +2359,7 @@ body.day-theme #mensagemBiblicaDiaria .mbd-data{color:#666}
   <h2>Finalizar pedido</h2>
   <div class="notice">Confira os dados e o valor antes de enviar.</div>
 
-  <div class="formgroup"><label>Nome</label><input id="clientName" type="text" placeholder="Seu nome" autocomplete="name"><label class="option" style="margin-top:8px"><input type="checkbox" id="v2SaveCustomerName"> Salvar meu nome neste aparelho (opcional)</label></div>
+  <div class="formgroup"><label>Nome</label><input id="clientName" type="text" placeholder="Coloque seu nome" autocomplete="name" required><label class="option" style="margin-top:8px"><input type="checkbox" id="v2SaveCustomerName"> Salvar meu nome neste aparelho (opcional)</label></div>
   <div class="section">
     <label class="option"><input type="radio" name="delivery" value="Balcão" data-price="0" onchange="delivery(this)"> Retirada no balcão</label>
   </div>
@@ -3930,7 +4078,7 @@ function getOrderCategory(item){
   return 'lanches';
 }
 function orderCategoryLabel(cat){
-  return ({lanches:'LANCHE',porcoes:'PORÇÃO',pastel:'PASTEL',bebidas:'BEBIDA',pizzas:'PIZZA',cachorro:'CACHORRÃO'})[String(cat||'').toLowerCase()]||'PRODUTO';
+  return ({lanches:'LANCHE',porcoes:'PORÇÃO',pastel:'PASTEL',bebidas:'BEBIDA',pizzas:'PIZZA',cachorro:'CACHORRÃO',promocao:'PROMOÇÃO'})[String(cat||'').toLowerCase()]||'PRODUTO';
 }
 function orderCategoryIcon(item){
   const c=getOrderCategory(item);
@@ -3938,7 +4086,7 @@ function orderCategoryIcon(item){
     const id=item?.product?.id, p=id?products.find(x=>String(x.id)===String(id)):null;
     return (p?.group||item?.product?.group)==='Especiais'?'⭐':(p?.group||item?.product?.group)==='Pizza Doce'?'🍓':'🍕';
   }
-  return ({lanches:'🍔',porcoes:'🍟',pastel:'🥟',bebidas:'🥤',cachorro:'🌭'})[c]||'';
+  return ({lanches:'🍔',porcoes:'🍟',pastel:'🥟',bebidas:'🥤',cachorro:'🌭',promocao:'🔥'})[c]||'';
 }
 function cleanOrderName(v){return String(v||'').replace(/[\r\n]/g,' ').replace(/^[\s]*(?:🍕|🍫|🤍|🌈|🥥|🍒|🍓|⭐|🥟|🌭|🥤|💧|🍺|🍔|🍟|🥞)\s*/u,'').replace(/\*/g,'').trim();}
 function buildOrderMessage(order){
@@ -4319,8 +4467,14 @@ function categoryImageUrl(category){
   const source=categoryImageSources[category]||'';
   return source ? source+'?baruki_v='+Date.now() : '';
 }
+function hasPromoActive(){return products.some(p=>p.cat==='promocao');}
 function renderCategories(){
-  document.getElementById('categories').innerHTML=categories.map(c=>{
+  const catList=(hasPromoActive()?[['promocao','🔥 Promoção']]:[]).concat(categories);
+  document.getElementById('categories').innerHTML=catList.map(c=>{
+    if(c[0]==='promocao'){
+      return '<button type="button" class="cat promo-cat '+(c[0]===currentCategory?'active':'')+'" onclick="selectCategory(\'promocao\')">'+
+      '<span class="promo-emoji" aria-hidden="true">🔥</span><span class="category-label">Promoção</span></button>';
+    }
     const imageUrl=categoryImageUrl(c[0]);
     return '<button type="button" class="cat '+(c[0]===currentCategory?'active':'')+'" onclick="selectCategory(\''+c[0]+'\')">'+
     '<img class="category-image" src="'+imageUrl+'" alt="" loading="eager"><span class="category-label">'+c[1].replace(/^[^ ]+\s/,'')+'</span></button>';
@@ -4398,7 +4552,7 @@ function clearMenuSearch(){
 function renderSearchResults(query, box){
   const normalize=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const q=normalize(query);
-  const catNames={lanches:'lanches hamburguer',porcoes:'porcoes batata frita',pastel:'pastel pasteis',bebidas:'bebidas agua refrigerante cerveja',pizzas:'pizza pizzas',cachorro:'cachorro quente cachorrao'};
+  const catNames={lanches:'lanches hamburguer',porcoes:'porcoes batata frita',pastel:'pastel pasteis',bebidas:'bebidas agua refrigerante cerveja',pizzas:'pizza pizzas',cachorro:'cachorro quente cachorrao',promocao:'promocao promocoes oferta combo'};
   const matches=products.filter(p=>{
     const text=[p.name,p.desc,p.cat,p.group,catNames[p.cat],...(Array.isArray(p.ingredients)?p.ingredients:[])].join(' ');
     return normalize(text).includes(q);
@@ -4467,6 +4621,7 @@ function renderProducts(){
     let price='Consulte';
     if(p.sizePrices)price=money(p.price)+' P / '+money(p.priceG)+' G';
     else if(p.price>0)price=money(p.price);
+    if(p.cat==='promocao'&&p.oldPrice>p.price&&p.price>0)price='<s style="opacity:.6;font-size:.8em;font-weight:700">'+money(p.oldPrice)+'</s> '+money(p.price);
     const button=p.price>0||p.sizePrices?'ADICIONAR':'VER OPÇÕES';
     return '<article class="product"><h3>'+safeText(p.name)+'</h3><div class="desc">'+safeText(p.desc)+'</div><div class="price">'+price+'</div><div class="product-card-actions">'+productCardQty(p.id)+'<button class="add" onclick="addFromProductCard(\''+p.id+'\')">'+button+'</button></div></article>';
   }).join('');
@@ -5052,7 +5207,8 @@ function sendWhatsApp(){
   const address=document.getElementById('address').value.trim();
   const number=document.getElementById('addressNumber').value.trim();
 
-  // O nome é opcional; os demais campos obrigatórios continuam sendo validados.
+  // O nome é obrigatório para finalizar o pedido.
+  if(!name){toast('Informe seu nome para finalizar o pedido.');const cn=document.getElementById('clientName');if(cn)cn.focus();return;}
   if(!selectedDelivery){toast('Escolha a forma de entrega.');return}
   if(!selectedPayment){toast('Escolha a forma de pagamento.');return}
 
@@ -8622,11 +8778,11 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    Se a planilha não carregar, o cardápio atual continua funcionando.
    ========================================================= */
 (function(){
-  var SHEET_ID='13DxZa01S51bx8vNF5LW1EO-obadwYT5ml36tQ51sIQI';
+  var SHEET_ID='1EWPe-6Hb-MQA1Nf0usgP3E4DPjN_LRFtZYT0SK2-k80';
   var SHEET_TAB='Cardápio';
   var SHEET_URL='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
   var CACHE_KEY='baruki_planilha_cache_v3';
-  var CATS={lanches:'lanches',cachorrao:'cachorro',cachorro:'cachorro',porcoes:'porcoes',bebidas:'bebidas',pizza:'pizzas',pizzas:'pizzas',pasteis:'pastel',pastel:'pastel'};
+  var CATS={promocao:'promocao',promocoes:'promocao',lanches:'lanches',cachorrao:'cachorro',cachorro:'cachorro',porcoes:'porcoes',bebidas:'bebidas',pizza:'pizzas',pizzas:'pizzas',pasteis:'pastel',pastel:'pastel'};
 
   // Aceita variações como "Pizza Doce", "Pizza Salgada", "Pastéis", "Pastel Doce"...
   function resolveCat(raw){
@@ -8658,6 +8814,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
     return rows;
   }
 
+  function isOn(v){var n=norm(v);return n==='SIM'||n==='S'||n==='ATIVA'||n==='ATIVO'||n==='1'||n==='TRUE'||n==='VERDADEIRO'||n==='X';}
   function parseMoney(v){
     var s=String(v==null?'':v).replace(/[^\d,.\-]/g,'');
     if(!s)return 0;
@@ -8680,6 +8837,8 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
       else if(h==='INGREDIENTES')col.ing=i;
       else if(h==='DESCRICAO')col.desc=i;
       else if(h==='GRUPO'||h==='SUBCATEGORIA')col.grp=i;
+      else if(h==='ATIVA'||h==='ATIVO'||h==='ATIVAR'||h==='PROMOCAO ATIVA')col.active=i;
+      else if(h.indexOf('PRECO ORIGINAL')===0||h.indexOf('PRECO DE')===0)col.oldPrice=i;
       else if(h==='PRECO G'||h==='PRECO GRANDE')col.priceG=i;
       else if(h.indexOf('PRECO')===0)col.price=i;
     });
@@ -8693,13 +8852,24 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
         priceG:col.priceG!=null?parseMoney(x[col.priceG]):0,
         ing:col.ing!=null?String(x[col.ing]||'').trim():'',
         desc:col.desc!=null?String(x[col.desc]||'').trim():'',
+        oldPrice:col.oldPrice!=null?parseMoney(x[col.oldPrice]):0,
+        on:col.active==null?true:isOn(x[col.active]),
         grp:(col.grp!=null?String(x[col.grp]||'').trim():'')||rc.hint});
     }
     if(parsed.length<10)return false; // proteção: planilha vazia/incompleta não apaga o cardápio
     var byKey={};
     products.forEach(function(p){byKey[key(p.cat,p.name)]=p;});
     var added=0;
+    // PROMOÇÕES: refeitas a cada leitura. Linha com Categoria "Promoção" e Ativa = SIM entra;
+    // se nenhuma estiver ativa, a categoria some e o cardápio segue normal.
+    for(var k=products.length-1;k>=0;k--){if(products[k].cat==='promocao')products.splice(k,1);}
+    parsed.forEach(function(d,n){
+      if(d.cat!=='promocao'||!d.on||!(d.price>0))return;
+      products.push({id:'promo_'+n+'_'+key('',d.name).slice(1,12),cat:'promocao',name:d.name,price:d.price,oldPrice:d.oldPrice,
+        desc:d.desc||d.ing,ingredients:[],group:'',sizePrices:false});
+    });
     parsed.forEach(function(d){
+      if(d.cat==='promocao')return;
       var p=byKey[key(d.cat,d.name)];
       if(!p){
         // produto novo: só entra onde não precisa de grupo (lanches, cachorrão, porções)
@@ -8722,7 +8892,18 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
     return true;
   }
 
+  var promoShown=false;
+  function syncPromoCategory(){
+    try{
+      var has=hasPromoActive();
+      if(has===promoShown)return;
+      promoShown=has;
+      if(!has&&currentCategory==='promocao')currentCategory='lanches';
+      renderCategories();
+    }catch(e){console.error('[Planilha] erro na categoria de promoção',e);}
+  }
   function refresh(){
+    syncPromoCategory();
     try{
       var menu=document.getElementById('menu');
       if(!menu||menu.classList.contains('active')){
@@ -8761,6 +8942,115 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
   load();
   setInterval(load,5000);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+})();
+</script>
+<!-- PROMOÇÃO no novo modelo (adicionado): aparece dentro da categoria Promoção -->
+<style id="baruki-promo-banner-style">
+#barukiPromoBanner{grid-column:1/-1;margin:0 0 6px;padding:14px 12px 12px;border-radius:22px;border:1px solid #ffd24a;
+background:linear-gradient(135deg,#ff9d00 0%,#ff6a00 45%,#f32618 100%);box-shadow:0 8px 24px rgba(243,38,24,.35);color:#fff;box-sizing:border-box;overflow:hidden}
+#barukiPromoBanner.stack .bpb-row{flex-direction:column;overflow:visible}#barukiPromoBanner.stack .bpb-card{flex-basis:auto;max-width:none;width:100%}
+#barukiPromoBanner .bpb-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+#barukiPromoBanner .bpb-fire{font-size:38px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+#barukiPromoBanner .bpb-titles{flex:1;min-width:0}
+#barukiPromoBanner .bpb-title{font-size:26px;font-weight:900;letter-spacing:.5px;line-height:1;text-transform:uppercase}
+#barukiPromoBanner .bpb-sub{font-size:13px;font-weight:700;color:#ffe9a8;margin-top:3px}
+#barukiPromoBanner .bpb-all{flex:0 0 auto;border:2px solid #ffe9a8;background:rgba(160,40,0,.55);color:#fff;font-weight:800;font-size:14px;padding:9px 14px;border-radius:999px;cursor:pointer;font-family:inherit}
+#barukiPromoBanner .bpb-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none}
+#barukiPromoBanner .bpb-row::-webkit-scrollbar{display:none}
+#barukiPromoBanner .bpb-card{position:relative;flex:0 0 78%;max-width:340px;scroll-snap-align:start;box-sizing:border-box;background:#1a0d0a;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px}
+#barukiPromoBanner .bpb-row.single .bpb-card{flex-basis:100%;max-width:none}
+#barukiPromoBanner .bpb-name{font-size:18px;font-weight:900;color:#ffd166;text-transform:uppercase;line-height:1.15;}
+#barukiPromoBanner .bpb-desc{font-size:14px;color:#f1e6df;line-height:1.35;min-height:2.7em}
+#barukiPromoBanner .bpb-badge{position:absolute;top:12px;right:12px;background:#ffd24a;color:#7a1b00;font-weight:900;font-size:13px;padding:5px 10px;border-radius:999px}
+#barukiPromoBanner .bpb-prices{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:auto}
+#barukiPromoBanner .bpb-old{font-size:15px;font-weight:700;color:#9a8d86;text-decoration:line-through}
+#barukiPromoBanner .bpb-new{font-size:30px;font-weight:900;color:#5dff8a;line-height:1}
+#barukiPromoBanner .bpb-buy{border:0;border-radius:12px;padding:13px;font-size:16px;font-weight:900;color:#fff;cursor:pointer;font-family:inherit;text-transform:uppercase;background:linear-gradient(180deg,#2ad564,#139a47);box-shadow:0 3px 10px rgba(0,0,0,.35)}
+#barukiPromoBanner .bpb-buy:active{transform:scale(.98)}
+@media(max-width:480px){#barukiPromoBanner .bpb-title{font-size:23px}#barukiPromoBanner .bpb-new{font-size:27px}}
+</style>
+<script id="baruki-promo-banner-script">
+(function(){
+  var stack=false;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function fmt(v){try{return money(v);}catch(e){return 'R$ '+Number(v).toFixed(2).replace('.',',');}}
+  function html(list){
+    var cards=list.map(function(p){
+      var off=p.oldPrice>p.price?Math.round((p.oldPrice-p.price)/p.oldPrice*100):0;
+      return '<article class="bpb-card">'+
+        '<div class="bpb-name">🔥 '+esc(p.name)+'</div><div class="bpb-desc">'+esc(p.desc)+'</div>'+
+        '<div class="bpb-prices">'+(p.oldPrice>p.price?'<span class="bpb-old">'+fmt(p.oldPrice)+'</span>':'')+'<span class="bpb-new">'+fmt(p.price)+'</span></div>'+
+        '<button type="button" class="bpb-buy" data-id="'+esc(p.id)+'">Quero essa!</button></article>';
+    }).join('');
+    return '<section id="barukiPromoBanner" class="'+(stack?'stack':'')+'" aria-label="Promoções"><div class="bpb-head"><span class="bpb-fire" aria-hidden="true">🔥</span>'+
+      '<div class="bpb-titles"><div class="bpb-title">Promoção</div><div class="bpb-sub">Aproveite enquanto durar!</div></div>'+
+      (list.length>1?'<button type="button" class="bpb-all">'+(stack?'‹ Recolher':'Ver tudo ›')+'</button>':'')+'</div>'+
+      '<div class="bpb-row'+(list.length===1?' single':'')+'">'+cards+'</div></section>';
+  }
+  // Só desvia a exibição da categoria Promoção; todas as outras categorias usam a função original.
+  var orig=window.renderProducts;
+  if(typeof orig!=='function'){console.error('[Promoção] renderProducts não encontrada');return;}
+  window.renderProducts=function(){
+    try{
+      var q=document.getElementById('barukiMenuSearch');
+      var query=q&&q.value&&q.value.trim();
+      if(!query&&currentCategory==='promocao'){
+        var box=document.getElementById('products');
+        var list=products.filter(function(p){return p&&p.cat==='promocao'&&p.price>0;});
+        if(box&&list.length){box.classList.remove('pizza-view');box.innerHTML=html(list);return;}
+      }
+    }catch(e){console.error('[Promoção]',e);}
+    return orig.apply(this,arguments);
+  };
+  document.addEventListener('click',function(ev){
+    var t=ev.target.closest?ev.target:null;if(!t)return;
+    var buy=t.closest('#barukiPromoBanner .bpb-buy');
+    if(buy){try{addFromProductCard(buy.getAttribute('data-id'));}catch(e){console.error(e);}return;}
+    if(t.closest('#barukiPromoBanner .bpb-all')){stack=!stack;window.renderProducts();}
+  });
+})();
+</script>
+<!-- CHAMA no 🔥 da categoria Promoção (adicionado): o próprio emoji se mexe como fogo, só visual -->
+<style id="baruki-chama-style">
+#categories .cat.promo-cat .promo-emoji .chama{position:relative;display:inline-block;line-height:1;transform-origin:50% 92%;
+  animation:barukiChama 1.15s ease-in-out infinite;will-change:transform,filter}
+#categories .cat.promo-cat .promo-emoji .chama::before,#categories .cat.promo-cat .promo-emoji .chama::after{
+  content:attr(data-e);position:absolute;left:0;top:0;width:100%;text-align:center;pointer-events:none;transform-origin:50% 92%}
+#categories .cat.promo-cat .promo-emoji .chama::before{opacity:.55;filter:hue-rotate(-18deg) saturate(1.5) brightness(1.15) blur(.4px);animation:barukiChamaB .8s ease-in-out infinite}
+#categories .cat.promo-cat .promo-emoji .chama::after{opacity:.45;filter:hue-rotate(22deg) saturate(1.4) brightness(1.3) blur(.6px);animation:barukiChamaC 1.45s ease-in-out infinite}
+@keyframes barukiChama{
+  0%{transform:perspective(220px) rotateY(-10deg) scale(1,1) skewX(0) rotate(0);filter:brightness(1) drop-shadow(0 0 7px rgba(255,150,0,.8))}
+  15%{transform:perspective(220px) rotateY(-4deg) scale(.95,1.09) skewX(-4deg) rotate(-2.5deg);filter:brightness(1.15) drop-shadow(0 0 12px rgba(255,190,30,1))}
+  32%{transform:perspective(220px) rotateY(8deg) scale(1.04,.96) skewX(3deg) rotate(2deg);filter:brightness(.95) drop-shadow(0 0 6px rgba(255,110,0,.75))}
+  50%{transform:perspective(220px) rotateY(12deg) scale(.94,1.13) skewX(4deg) rotate(2.5deg);filter:brightness(1.2) drop-shadow(0 0 14px rgba(255,200,40,1))}
+  68%{transform:perspective(220px) rotateY(2deg) scale(1.03,1) skewX(-3deg) rotate(-1.5deg);filter:brightness(1) drop-shadow(0 0 8px rgba(255,140,0,.85))}
+  85%{transform:perspective(220px) rotateY(-8deg) scale(.97,1.08) skewX(2deg) rotate(-2deg);filter:brightness(1.1) drop-shadow(0 0 11px rgba(255,170,20,.95))}
+  100%{transform:perspective(220px) rotateY(-10deg) scale(1,1) skewX(0) rotate(0);filter:brightness(1) drop-shadow(0 0 7px rgba(255,150,0,.8))}
+}
+@keyframes barukiChamaB{
+  0%,100%{transform:translateY(-2px) scale(.9,1.12) skewX(3deg) rotate(2deg)}
+  30%{transform:translateY(-4px) scale(.84,1.2) skewX(-4deg) rotate(-3deg)}
+  60%{transform:translateY(-2px) scale(.92,1.1) skewX(5deg) rotate(3deg)}
+}
+@keyframes barukiChamaC{
+  0%,100%{transform:translateY(-3px) scale(.8,1.18) skewX(-3deg) rotate(-2deg)}
+  40%{transform:translateY(-6px) scale(.72,1.28) skewX(4deg) rotate(3deg)}
+  70%{transform:translateY(-3px) scale(.82,1.15) skewX(-5deg) rotate(-3deg)}
+}
+@media(prefers-reduced-motion:reduce){#categories .cat.promo-cat .promo-emoji .chama,#categories .cat.promo-cat .promo-emoji .chama::before,#categories .cat.promo-cat .promo-emoji .chama::after{animation:none}}
+</style>
+<script id="baruki-chama-script">
+(function(){
+  function wrap(){
+    document.querySelectorAll('#categories .cat.promo-cat .promo-emoji').forEach(function(b){
+      if(b.querySelector('.chama'))return;
+      var e=(b.textContent||'🔥').trim()||'🔥';
+      b.innerHTML='<span class="chama" data-e="'+e+'">'+e+'</span>';
+    });
+  }
+  var c=document.getElementById('categories');
+  if(c)new MutationObserver(wrap).observe(c,{childList:true});
+  wrap();setInterval(wrap,2000);
 })();
 </script>
 </body>
