@@ -2080,7 +2080,7 @@ html.ctl-comer-off #optComerNoLocal{display:none!important}
    Se a aba não carregar, nada muda: o site segue como está (usa o último estado salvo no aparelho). */
 (function(){
   'use strict';
-  var SHEET_ID='1JcR5vI7_u3skRZFmAhq5YyQXvXpZgsyUKlrlP-he7y8';
+  var SHEET_ID='1f07FcDqcfMyg6xQvD8WHTz-6b3d1ps10VzlVcdpwh_o';
   var SHEET_TAB='Controle';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
   var CACHE_KEY='baruki_controle_cache_v4';
@@ -6150,7 +6150,7 @@ img, video, canvas, svg{
   initSound();
 
   /* Tema Dia / Noite */
-  const THEME_KEY='baruki_theme_v3';
+  const THEME_KEY='baruki_theme_v2';
   function applyTheme(theme){
     const day=theme==='day';
     document.body.classList.toggle('day-theme',day);
@@ -9007,7 +9007,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    Se a planilha não carregar, o cardápio atual continua funcionando.
    ========================================================= */
 (function(){
-  var SHEET_ID='1JcR5vI7_u3skRZFmAhq5YyQXvXpZgsyUKlrlP-he7y8';
+  var SHEET_ID='1f07FcDqcfMyg6xQvD8WHTz-6b3d1ps10VzlVcdpwh_o';
   var SHEET_TAB='Cardápio';
   var SHEET_URL='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
   var CACHE_KEY='baruki_planilha_cache_v6';
@@ -9638,7 +9638,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    Se a aba não carregar, nada muda. */
 (function(){
   'use strict';
-  var SHEET_ID='1JcR5vI7_u3skRZFmAhq5YyQXvXpZgsyUKlrlP-he7y8';
+  var SHEET_ID='1f07FcDqcfMyg6xQvD8WHTz-6b3d1ps10VzlVcdpwh_o';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Pedido');
   var MAP={comer_no_local:'optComerNoLocal',retirada_balcao:'optRetiradaBalcao',entrega_floriano:'optFloriano',
            entrega_nova_floresta:'optNovaFloresta',pix:'optPix',cartao:'optCartao',dinheiro:'optDinheiro'};
@@ -9732,7 +9732,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    Se a aba não carregar ou o valor for inválido, nada muda. */
 (function(){
   'use strict';
-  var SHEET_ID='1JcR5vI7_u3skRZFmAhq5YyQXvXpZgsyUKlrlP-he7y8';
+  var SHEET_ID='1f07FcDqcfMyg6xQvD8WHTz-6b3d1ps10VzlVcdpwh_o';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Contatos');
   var last='',busy=false;
   function plain(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toUpperCase();}
