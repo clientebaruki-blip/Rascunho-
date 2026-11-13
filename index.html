@@ -2071,20 +2071,26 @@ html.ctl-logo-off #categories .cat{min-height:52px!important}
 html.ctl-natal-off .nat-frame{display:none!important}
 html.ctl-natal-off body.nat-on{padding-top:0!important;padding-left:0!important;padding-right:0!important}
 html.ctl-comer-off #optComerNoLocal{display:none!important}
+html.ctl-teste-off #siteEmTesteBtn{display:none!important}
+html.ctl-mbiblica-off #mensagemBiblicaDiaria{display:none!important}
 #categories .cat .cat-emoji{display:flex!important;align-items:center;justify-content:center;font-size:44px;line-height:1;background:#111!important}
 @media(max-width:600px){#categories .cat .cat-emoji{font-size:38px}}
 </style>
 <script id="baruki-controle-script">
-/* Aba "Controle" da mesma planilha do cardápio. Colunas: RECURSO | STATUS | SITUAÇÃO | CHAVE.
+/* v12: lê também a seção AJUSTES DO SITE; ligados nesta versão: Site em teste e Mensagem bíblica.
+   Aba "Controle" da mesma planilha do cardápio. Colunas: RECURSO | STATUS | SITUAÇÃO | CHAVE.
    STATUS = ATIVADO / DESATIVADO. Cada chave age só no seu recurso.
    Se a aba não carregar, nada muda: o site segue como está (usa o último estado salvo no aparelho). */
 (function(){
   'use strict';
-  var SHEET_ID='1f07FcDqcfMyg6xQvD8WHTz-6b3d1ps10VzlVcdpwh_o';
+  var SHEET_ID='1wX152r1IwYKem5JJd7_WWGzbLAwfV2I8gPAIqfpeV8U';
   var SHEET_TAB='Controle';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
-  var CACHE_KEY='baruki_controle_cache_v4';
-  var KEYS=['loja','aviso_1','aviso_2','banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','natal','manutencao','logo_categorias','banner_sobe','promocao','atualizar_site','comer_no_local'];
+  var CACHE_KEY='baruki_controle_cache_v5';
+  var KEYS=['loja','aviso_1','aviso_2','banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','natal','manutencao','logo_categorias','banner_sobe','promocao','atualizar_site','comer_no_local','som_clique','cronometro_preparo','mensagem_biblica','site_em_teste','informacoes','aparencia','salvar_nome','nome_site','retirada_balcao','entrega','entrega_floriano','entrega_nova_floresta','forma_pagamento','pix','cartao','dinheiro','menu_inferior','menu_cardapio','menu_pedidos','menu_carrinho','menu_config','selo_loja','janela_config','bloco_contato','busca','barra_categorias','botao_adicionar','seletor_quantidade','voltar_carrinho','aviso_conferir','campo_nome','titulo_entrega','botao_enviar_pedido','limpar_carrinho','carrinho_vazio','botao_ver_cardapio','aviso_carrinho_limpo','texto_meus_pedidos','pedidos_vazio','modo_dia','modo_noite','instagram','whatsapp_contato','whatsapp_pedido','todas_funcoes'];
+  /* CHAVE GERAL (linha 3 da aba Controle): ATIVADO = liga tudo, DESATIVADO = desliga tudo, AUTOMÁTICO = cada função segue o seu STATUS.
+     Não mexe em: loja aberta/fechada, manutenção e Natal. */
+  var MASTER_KEYS=['aviso_1','aviso_2','banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','banner_sobe','logo_categorias','promocao','mensagem_biblica','site_em_teste'];
   var state={},last='',busy=false,manutApplied=null,remoteStatus=null,R=document.documentElement;
 
   function plain(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toUpperCase();}
@@ -2179,6 +2185,7 @@ html.ctl-comer-off #optComerNoLocal{display:none!important}
       if(v===undefined&&plain(r[c.status])==='')v=boolOf(r[c.final]);
       if(typeof v==='boolean'){out[k]=v;n++;}
     });
+    if(typeof out.todas_funcoes==='boolean'){var mv=out.todas_funcoes;MASTER_KEYS.forEach(function(k){out[k]=mv;});}
     return n>=4?out:null; /* proteção: aba ausente/incompleta não muda nada */
   }
   function has(k){return typeof state[k]==='boolean';}
@@ -2232,6 +2239,8 @@ html.ctl-comer-off #optComerNoLocal{display:none!important}
     flag('ctl-logo-off',state.logo_categorias===false);
     flag('ctl-natal-off',state.natal===false);
     flag('ctl-comer-off',state.comer_no_local===false);
+    flag('ctl-teste-off',state.site_em_teste===false);
+    flag('ctl-mbiblica-off',state.mensagem_biblica===false);
     if(state.comer_no_local===false){try{var cr=document.querySelector('input[name="delivery"][value="Comer no local"]');if(cr&&cr.checked){cr.checked=false;selectedDelivery=null;updateCheckout();}}catch(e){}}
     if(has('natal'))natal(state.natal===true);
     try{manut();}catch(e){console.error('[Controle] manutenção',e);}
@@ -5230,7 +5239,7 @@ function delivery(el){
   };
 
   const addressFields=document.getElementById('addressFields');
-  const showAddress=selectedDelivery.name==='Floriano' || selectedDelivery.name==='Nova Floresta';
+  const showAddress=selectedDelivery.name!=='Balcão' && selectedDelivery.name!=='Comer no local';
   if(addressFields) addressFields.classList.toggle('show',showAddress);
   const pickupFields=document.getElementById('pickupTimeFields');
   if(pickupFields) pickupFields.style.display=selectedDelivery.name==='Balcão'?'block':'none';
@@ -5409,7 +5418,7 @@ function startPrepTimer(){
   };
   tick();prepTimerInterval=setInterval(tick,250);
 }
-function activatePrepTimer(){if(!isPrepTimerEnabled())return;localStorage.setItem(PREP_TIMER_KEY,String(Date.now()+(45*60*1000)));startPrepTimer();}
+function activatePrepTimer(){if(!isPrepTimerEnabled())return;localStorage.setItem(PREP_TIMER_KEY,String(Date.now()+((window.__barukiPrepMin||45)*60*1000)));startPrepTimer();}
 refreshPrepTimerToggle();
 
 /* =========================
@@ -5557,6 +5566,8 @@ function sendWhatsApp(){
   }
 
   // Inicia o cronômetro de 45 minutos no momento em que o pedido é enviado.
+  if(window.__barukiMsgAbertura)message=window.__barukiMsgAbertura+'\n\n'+message;
+  if(window.__barukiMsgFinal)message+='\n\n'+window.__barukiMsgFinal;
   activatePrepTimer();
   // Salva primeiro no histórico e só depois limpa o carrinho.
   saveSentOrder(message,total);
@@ -5567,6 +5578,8 @@ function sendWhatsApp(){
   const url='https://wa.me/'+WHATSAPP_NUMBER+'?text='+encodeURIComponent(message);
   // Abre o WhatsApp na mesma aba para evitar bloqueio de pop-ups no celular.
   // O pedido e o histórico já foram salvos antes do redirecionamento.
+  // Ao finalizar, o site volta para o cardápio (assim, ao voltar do WhatsApp, a tela inicial já está aberta).
+  try{go('menu');window.scrollTo(0,0);}catch(e){}
   window.location.href=url;
 }
 
@@ -6244,7 +6257,7 @@ img, video, canvas, svg{
   V2.clearCart=function(){
     if(!cart.length)return;
     if(!V2.confirm('Tem certeza que deseja limpar todo o carrinho?'))return;
-    cart=[];saveCart();renderCart();V2.beep();V2.toast('Carrinho limpo.');
+    cart=[];saveCart();renderCart();V2.beep();if(!(window.BarukiAj&&window.BarukiAj.off('aviso_carrinho_limpo')))V2.toast('Carrinho limpo.');
   };
   window.changeQty=function(index,delta){
     if(!cart[index])return;
@@ -6664,7 +6677,7 @@ function fecharConfiguracoesBaruki(){
     dotsBox.innerHTML='';
     banners.forEach((b,i)=>{
       const slide=document.createElement('div');
-      slide.className='baruki-banner-slide';
+      slide.className='baruki-banner-slide';slide.dataset.bUrl=b.url;
       const img=document.createElement('img');
       img.src=b.src;
       img.alt='Banner '+(i+1);
@@ -8897,7 +8910,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
   const box=document.getElementById('barukiRodapeBanner');
   const img=document.getElementById('barukiRodapeBannerImg');
   if(!box||!img)return;
-  const LINK="https://www.socialcreator.com/srv/imgs/seccs/335147_ico.png?ts=1794150505";
+  const LINK_PADRAO="https://www.socialcreator.com/srv/imgs/seccs/335147_ico.png?ts=1794150505";
   const DURACAO=10000; // 10 segundos na tela
   let liberado=false, visivel=false, busy=false, jaMostrou=false, eraAberta=null, objUrl=null, hideTimer=null, fimTimer=null;
 
@@ -8908,6 +8921,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
     return day>=2&&day<=6&&m>=1080&&m<1350;
   }
   function novoLink(){
+    const LINK=window.__barukiRodapeLink||LINK_PADRAO;
     const stamp=Date.now(), rnd=stamp+'_'+Math.random().toString(36).slice(2);
     try{const u=new URL(LINK);u.searchParams.set('ts',String(stamp));u.searchParams.set('_baruki_rodape',rnd);return u.toString();}
     catch(e){return LINK+(LINK.includes('?')?'&':'?')+'ts='+stamp+'&_baruki_rodape='+rnd;}
@@ -9007,10 +9021,10 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    Se a planilha não carregar, o cardápio atual continua funcionando.
    ========================================================= */
 (function(){
-  var SHEET_ID='1f07FcDqcfMyg6xQvD8WHTz-6b3d1ps10VzlVcdpwh_o';
+  var SHEET_ID='1wX152r1IwYKem5JJd7_WWGzbLAwfV2I8gPAIqfpeV8U';
   var SHEET_TAB='Cardápio';
   var SHEET_URL='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
-  var CACHE_KEY='baruki_planilha_cache_v6';
+  var CACHE_KEY='baruki_planilha_cache_v8';
   var CATS={promocao:'promocao',promocoes:'promocao',lanches:'lanches',cachorrao:'cachorro',cachorro:'cachorro',porcoes:'porcoes',bebidas:'bebidas',pizza:'pizzas',pizzas:'pizzas',pasteis:'pastel',pastel:'pastel'};
 
   // Aceita variações como "Pizza Doce", "Pizza Salgada", "Pastéis", "Pastel Doce"...
@@ -9064,6 +9078,48 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
     return String(v||'').split(/\s*[;,|]\s*/).map(function(x){return x.trim().toLowerCase();}).filter(Boolean);
   }
 
+  /* ===== Modo por produto (coluna Horário): MANUAL / HORÁRIO PROGRAMADO / AUTOMÁTICO =====
+     BASE = lista de produtos original do HTML; cada leitura da planilha parte dela. */
+  var BASE=products.slice();
+  var timeSensitive=false,lastMin=-1,lastLoja=null;
+  function brNow(){
+    var p={};
+    try{new Intl.DateTimeFormat('en-US',{timeZone:'America/Sao_Paulo',hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',weekday:'short'}).formatToParts(new Date()).forEach(function(x){p[x.type]=x.value;});}
+    catch(e){var d=new Date();p={year:d.getFullYear(),month:d.getMonth()+1,day:d.getDate(),hour:d.getHours(),minute:d.getMinutes(),weekday:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]};}
+    return {y:+p.year,m:+p.month,d:+p.day,min:(+p.hour%24)*60+(+p.minute),wd:{Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6,Sun:7}[p.weekday]||1};
+  }
+  function hmOf(v){
+    var m=String(v==null?'':v).trim().match(/^(\d{1,2})(?:[:hH](\d{2}))?(?::\d{2})?\s*([AaPp][Mm])?$/);
+    if(!m)return null;
+    var h=+m[1],mi=+(m[2]||0),ap=(m[3]||'').toUpperCase();
+    if(ap==='PM'&&h<12)h+=12;if(ap==='AM'&&h===12)h=0;
+    if(h>24||mi>59)return null;
+    return (h%24)*60+mi;
+  }
+  function dtOf(v){
+    var t=String(v==null?'':v).trim(),m;
+    if((m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/))){var y=+m[3];if(y<100)y+=2000;return Date.UTC(y,+m[2]-1,+m[1]);}
+    if((m=t.match(/^(\d{4})-(\d{2})-(\d{2})/)))return Date.UTC(+m[1],+m[2]-1,+m[3]);
+    return null;
+  }
+  function schedOK(x,c){
+    var ab=hmOf(x[c.abre]),fe=hmOf(x[c.fecha]),ini=dtOf(x[c.ini]),fim=dtOf(x[c.fim]);
+    var temHora=ab!==null&&fe!==null;
+    if(!temHora&&ini===null&&fim===null)return false;
+    var n=brNow(),hoje=Date.UTC(n.y,n.m-1,n.d);
+    if(ini!==null&&hoje<ini)return false;
+    if(fim!==null&&hoje>fim)return false;
+    if(!temHora)return true;
+    var g=norm(x[c.dias]);
+    var okDia=g===''||g==='TODOS OS DIAS'||(g==='SEG A SEX'&&n.wd<=5)||(g==='TER A SAB'&&n.wd>=2&&n.wd<=6)||(g==='SEG A SAB'&&n.wd<=6)||(g==='SAB E DOM'&&n.wd>=6);
+    if(!okDia)return false;
+    return ab<fe?(n.min>=ab&&n.min<fe):(n.min>=ab||n.min<fe);
+  }
+  function modeOK(d){
+    if(d.mode==='AUTOMATICO'){var lj=null;try{lj=window.BarukiControle?window.BarukiControle.get('loja'):null;}catch(e){}return lj===true;}
+    if(d.mode==='HORARIO PROGRAMADO'||d.mode==='AGENDADO')return schedOK(d.row,d.cols);
+    return true;
+  }
   function apply(csv){
     var rows=parseCSV(csv);
     if(rows.length<2)return false;
@@ -9075,6 +9131,12 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
       else if(h==='DESCRICAO')col.desc=i;
       else if(h==='GRUPO'||h==='SUBCATEGORIA')col.grp=i;
       else if(h==='ATIVA'||h==='ATIVO'||h==='ATIVAR'||h==='PROMOCAO ATIVA')col.active=i;
+      else if(h==='HORARIO')col.mode=i;
+      else if(h==='ABRE')col.abre=i;
+      else if(h==='FECHA')col.fecha=i;
+      else if(h==='DIAS')col.dias=i;
+      else if(h==='INICIO')col.ini=i;
+      else if(h==='FIM')col.fim=i;
       else if(h.indexOf('PRECO ORIGINAL')===0||h.indexOf('PRECO DE')===0)col.oldPrice=i;
       else if(h==='PRECO G'||h==='PRECO GRANDE')col.priceG=i;
       else if(h.indexOf('PRECO')===0)col.price=i;
@@ -9098,9 +9160,11 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
         oldPrice:col.oldPrice!=null?parseMoney(x[col.oldPrice]):0,
         on:col.active==null?true:isOn(x[col.active]),
         off:col.active!=null&&['NAO','N','0','FALSE','FALSO','INATIVA','INATIVO'].indexOf(norm(x[col.active]))>-1,
-        grp:(col.grp!=null?String(x[col.grp]||'').trim():'')||rc.hint});
+        grp:(col.grp!=null?String(x[col.grp]||'').trim():'')||rc.hint,
+        mode:col.mode!=null?norm(x[col.mode]):'',row:x,cols:col});
     }
     if(parsed.length<10)return false; // proteção: planilha vazia/incompleta não apaga o cardápio
+    products.length=0;BASE.forEach(function(p){products.push(p);});
     var byKey={};
     products.forEach(function(p){byKey[key(p.cat,p.name)]=p;});
     var added=0;
@@ -9109,7 +9173,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
     var promoOff=false;try{promoOff=!!(window.BarukiControle&&window.BarukiControle.promoOff());}catch(e){}
     for(var k=products.length-1;k>=0;k--){if(products[k].cat==='promocao'||String(products[k].cat).indexOf('x_')===0)products.splice(k,1);}
     parsed.forEach(function(d,n){
-      if(promoOff||d.cat!=='promocao'||!d.on||!(d.price>0))return;
+      if(promoOff||d.cat!=='promocao'||!d.on||!(d.price>0)||!modeOK(d))return;
       products.push({id:'promo_'+n+'_'+key('',d.name).slice(1,12),cat:'promocao',name:d.name,price:d.price,oldPrice:d.oldPrice,
         desc:d.desc||d.ing,ingredients:[],group:'',sizePrices:false});
     });
@@ -9123,7 +9187,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
       else if(!DYN[d.cat].emoji&&emo)DYN[d.cat].emoji=emo;
     });
     parsed.forEach(function(d){
-      if(d.cat.indexOf('x_')!==0||!d.dl||d.off||!(d.price>=0))return;
+      if(d.cat.indexOf('x_')!==0||!d.dl||d.off||!(d.price>=0)||!modeOK(d))return;
       if(!DYN[d.cat].emoji){var m=d.name.match(/^((?:\p{Extended_Pictographic}[\uFE0F\u200D]*)+)/u);if(m)DYN[d.cat].emoji=m[1];}
       var kk=key(d.cat,d.name);dupe[kk]=(dupe[kk]||0)+1;
       products.push({id:'planilha_'+d.cat+'_'+kk.split('|')[1].slice(0,24)+(dupe[kk]>1?'_'+dupe[kk]:''),cat:d.cat,name:d.name,price:d.price,
@@ -9134,9 +9198,11 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
       DYN[slug]=(DYN[slug].emoji||'🍽️')+' '+DYN[slug].name;
       categories.push([slug,DYN[slug]]);
     });
+    var hideList=[];
     parsed.forEach(function(d){
       if(d.cat==='promocao'||d.cat.indexOf('x_')===0)return;
       var p=byKey[key(d.cat,d.name)];
+      if(d.off||!modeOK(d)){if(p)hideList.push(p);return;}
       if(!p){
         // produto novo: só entra onde não precisa de grupo (lanches, cachorrão, porções)
         var grp='';
@@ -9155,6 +9221,8 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
       if(d.desc)p.desc=d.desc;
       if(d.ing)p.ingredients=splitIngredients(d.ing);
     });
+    hideList.forEach(function(p){var i=products.indexOf(p);if(i>-1)products.splice(i,1);});
+    timeSensitive=parsed.some(function(d){return d.mode==='AUTOMATICO'||d.mode==='HORARIO PROGRAMADO'||d.mode==='AGENDADO';});
     return true;
   }
 
@@ -9207,7 +9275,9 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
       if(!r.ok)throw new Error('HTTP '+r.status);
       return r.text();
     }).then(function(csv){
-      if(csv===last)return; // sem alteração: nada muda
+      var mn=Math.floor(Date.now()/60000),lj=null;try{lj=window.BarukiControle?window.BarukiControle.get('loja'):null;}catch(e){}
+      if(csv===last&&!(timeSensitive&&mn!==lastMin)&&lj===lastLoja)return; // sem alteração: nada muda
+      lastMin=mn;lastLoja=lj;
       if(apply(csv)){
         last=csv;
         try{localStorage.setItem(CACHE_KEY,csv);}catch(e){}
@@ -9369,7 +9439,7 @@ box-shadow:0 6px 18px rgba(243,38,24,.22),inset 0 1px 0 rgba(255,255,255,.06);co
   'use strict';
   /* Cole aqui o endereço do Apps Script (veja o arquivo apps_script_painel.gs). Vazio = painel só mostra o estado. */
   var APPS_SCRIPT_URL='';
-  var ITENS=[['loja','🏪 Loja (aberta / fechada)'],['promocao','🔥 Promoções'],['banners','🖼️ Banners'],['natal','🎄 Função Natal'],['manutencao','🛠️ Manutenção']];
+  var ITENS=[['todas_funcoes','⚡ TODAS AS FUNÇÕES (ligar / desligar tudo)'],['loja','🏪 Loja (aberta / fechada)'],['promocao','🔥 Promoções'],['banners','🖼️ Banners'],['natal','🎄 Função Natal'],['manutencao','🛠️ Manutenção']];
   var KEY_STORE='baruki_painel_chave',box=null,msg=null;
 
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -9638,7 +9708,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    Se a aba não carregar, nada muda. */
 (function(){
   'use strict';
-  var SHEET_ID='1f07FcDqcfMyg6xQvD8WHTz-6b3d1ps10VzlVcdpwh_o';
+  var SHEET_ID='1wX152r1IwYKem5JJd7_WWGzbLAwfV2I8gPAIqfpeV8U';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Pedido');
   var MAP={comer_no_local:'optComerNoLocal',retirada_balcao:'optRetiradaBalcao',entrega_floriano:'optFloriano',
            entrega_nova_floresta:'optNovaFloresta',pix:'optPix',cartao:'optCartao',dinheiro:'optDinheiro'};
@@ -9732,7 +9802,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    Se a aba não carregar ou o valor for inválido, nada muda. */
 (function(){
   'use strict';
-  var SHEET_ID='1f07FcDqcfMyg6xQvD8WHTz-6b3d1ps10VzlVcdpwh_o';
+  var SHEET_ID='1wX152r1IwYKem5JJd7_WWGzbLAwfV2I8gPAIqfpeV8U';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Contatos');
   var last='',busy=false;
   function plain(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toUpperCase();}
@@ -9787,5 +9857,581 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
 })();
 </script>
 <!-- ===== FIM WHATSAPP E CONTATOS ===== -->
+
+<!-- ===== PLANILHA v2: controles novos (abas Controle/AJUSTES, Remoto, Site, Imagens) ===== -->
+<script id="baruki-planilha-v2">
+/* =========================================================
+   PLANILHA v2 — ligação dos controles novos da planilha de controle remoto.
+   Lê as abas: Controle (seção AJUSTES DO SITE), Remoto, Site e Imagens.
+   Regra de ouro: se uma aba não carregar ou vier incompleta, NADA muda no site.
+   Nenhuma função, ID ou chave anterior foi removida.
+   ========================================================= */
+(function(){
+  'use strict';
+  var SHEET_ID='1wX152r1IwYKem5JJd7_WWGzbLAwfV2I8gPAIqfpeV8U';
+  var root=document.documentElement;
+  var S={aj:{},rem:{},bl:[],rodLink:'',cats:{},imgs:null};
+  var last={};
+
+  function url(tab){return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(tab)+'&_='+Date.now();}
+  function plain(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toUpperCase();}
+  function norm(s){return plain(s).replace(/[^A-Z0-9]/g,'');}
+  function $(s,r){return (r||document).querySelector(s);}
+  function $$(s,r){return [].slice.call((r||document).querySelectorAll(s));}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function https(u){u=String(u==null?'':u).trim();return /^https:\/\//i.test(u)?u:'';}
+  function money(v){
+    var s=String(v==null?'':v).replace(/[^\d,.\-]/g,'');
+    if(!s)return NaN;
+    if(s.indexOf(',')>-1)s=s.replace(/\./g,'').replace(',','.');
+    var n=parseFloat(s);return isNaN(n)?NaN:n;
+  }
+  function parseCSV(t){
+    var rows=[],row=[],cur='',q=false,i,c;
+    for(i=0;i<t.length;i++){c=t[i];
+      if(q){if(c==='"'){if(t[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=c;}
+      else if(c==='"')q=true;
+      else if(c===','){row.push(cur);cur='';}
+      else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';}
+      else if(c!=='\r')cur+=c;
+    }
+    if(cur!==''||row.length){row.push(cur);rows.push(row);}
+    return rows;
+  }
+  function styleEl(id){var e=document.getElementById(id);if(!e){e=document.createElement('style');e.id=id;(document.head||root).appendChild(e);}return e;}
+  function textNode(label){var n=null;for(var i=0;i<label.childNodes.length;i++){var x=label.childNodes[i];if(x.nodeType===3&&x.nodeValue.trim())n=x;}return n;}
+  var COLORS={'VERMELHO':'#F32618','LARANJA':'#F97316','AMARELO':'#FACC15','VERDE':'#2E7D32','AZUL':'#1D4ED8','ROXO':'#7C3AED','ROSA':'#DB2777','PRETO':'#000000','BRANCO':'#FFFFFF','CINZA CLARO':'#F3F4F6','CINZA ESCURO':'#1F2933','DOURADO':'#D4AF37'};
+  function colorOf(v){v=String(v||'').trim();if(/^#[0-9a-f]{6}$/i.test(v))return v;return COLORS[plain(v)]||'';}
+
+  /* ---------- 1) Controle › AJUSTES DO SITE: liga/desliga, cor e tamanho ---------- */
+  var SEL={
+    som_clique:['#soundToggle'],
+    cronometro_preparo:['#prepTimerToggle','.prep-timer-slot'],
+    mensagem_biblica:['#mensagemBiblicaDiaria','#mensagemBiblicaToggle'],
+    site_em_teste:['#siteEmTesteBtn'],
+    informacoes:['.settings-info-btn'],
+    aparencia:['.theme-options'],
+    salvar_nome:[],
+    entrega:['#optFloriano','#optNovaFloresta','.bk-regiao'],
+    forma_pagamento:['#optPix','#optCartao','#optDinheiro'],
+    menu_inferior:['nav.bottom'],
+    menu_cardapio:['#nMenu'],menu_pedidos:['#nOrders'],menu_carrinho:['#nCart'],menu_config:['#settingsFab'],
+    selo_loja:['.header .status'],
+    janela_config:['#settingsFab','#settingsOverlay'],
+    bloco_contato:['.settings-contact-grid'],
+    busca:['.baruki-search-wrap'],barra_categorias:['#categories'],
+    botao_adicionar:['.product .add'],seletor_quantidade:['.product-qty'],
+    voltar_carrinho:['#checkout .back'],
+    aviso_conferir:['#checkout .container>.notice'],
+    campo_nome:[],titulo_entrega:[],
+    botao_enviar_pedido:['.baruki-send-order','.baruki-checkout-tip'],
+    limpar_carrinho:['#cartContent [onclick*="clearCart"]'],
+    carrinho_vazio:['#cartContent .empty p'],
+    botao_ver_cardapio:['#cartContent .empty .btn'],
+    texto_meus_pedidos:['#orders .notice'],
+    pedidos_vazio:['#ordersContent .orders-empty'],
+    modo_dia:['#themeDayOption'],modo_noite:['#themeNightOption']
+  };
+  function prev(el){var p=el&&el.previousElementSibling;return p&&p.classList.contains('settings-label')?p:null;}
+  function h3(t){return $$('#checkout h3').filter(function(x){return plain(x.textContent)===plain(t);});}
+  var TAGS={
+    som_clique:function(){return [prev($('#soundToggle'))];},
+    cronometro_preparo:function(){return [prev($('#prepTimerToggle'))];},
+    mensagem_biblica:function(){return [prev($('#mensagemBiblicaToggle'))];},
+    site_em_teste:function(){return [prev($('#siteEmTesteBtn'))];},
+    aparencia:function(){return [prev($('.theme-options'))];},
+    bloco_contato:function(){return [prev($('.settings-contact-grid'))];},
+    salvar_nome:function(){var n=$('#v2SaveCustomerName');return [n&&n.closest('label')];},
+    campo_nome:function(){var n=$('#clientName');return n?[n,n.previousElementSibling]:[];},
+    titulo_entrega:function(){return h3('Forma de entrega');},
+    forma_pagamento:function(){return h3('Forma de pagamento');}
+  };
+  function tag(){
+    Object.keys(TAGS).forEach(function(k){
+      try{TAGS[k]().forEach(function(el){if(el&&el.classList)el.classList.add('bk-k-'+k);});}catch(e){}
+    });
+  }
+  /* Chave geral: S.master = 'ATIVADO' | 'DESATIVADO' | '' (vem da linha 3 da aba Controle) */
+  function masterOf(rows){
+    for(var i=0;i<rows.length;i++){
+      if(String(rows[i][3]||'').trim().toLowerCase()==='todas_funcoes'){var m=plain(rows[i][1]);return (m==='ATIVADO'||m==='DESATIVADO')?m:'';}
+    }
+    return '';
+  }
+  function effSt(k){
+    if(S.master==='DESATIVADO')return 'DESATIVADO';
+    if(S.master==='ATIVADO')return 'ATIVADO';
+    var o=S.aj[k];return o?o.st:'';
+  }
+  /* tamanho: Px20 / 20px / 20 (8 a 60 px) ou 120% (50% a 300%); vazio/100% = original */
+  function sizeCss(s){
+    s=String(s==null?'':s).trim().toLowerCase().replace(',','.');
+    var m=s.match(/^(\d{2,3})\s*%$/);
+    if(m){var pc=parseInt(m[1],10);return (pc!==100&&pc>=50&&pc<=300)?pc+'%':'';}
+    m=s.match(/^(?:px\s*)?(\d{1,2}(?:\.\d+)?)(?:\s*px)?$/);
+    if(m){var n=parseFloat(m[1]);return (n>=8&&n<=60)?n+'px':'';}
+    return '';
+  }
+  /* Nome/texto personalizado de cada função (coluna "NOME / NUMERO / LINK" da aba Controle) */
+  function cls(k){return function(){return $$('.bk-k-'+k);};}
+  var NAMES={
+    som_clique:function(){return [prev($('#soundToggle'))];},
+    cronometro_preparo:function(){return [prev($('#prepTimerToggle'))];},
+    mensagem_biblica:function(){return [prev($('#mensagemBiblicaToggle'))];},
+    site_em_teste:function(){return [prev($('#siteEmTesteBtn'))];},
+    informacoes:function(){return $$('.settings-info-btn');},
+    aparencia:function(){return [prev($('.theme-options'))];},
+    bloco_contato:function(){return [prev($('.settings-contact-grid'))];},
+    salvar_nome:function(){var n=$('#v2SaveCustomerName');return [n&&n.closest('label')];},
+    campo_nome:function(){return $$('label.bk-k-campo_nome');},
+    titulo_entrega:cls('titulo_entrega'),
+    forma_pagamento:function(){return $$('h3.bk-k-forma_pagamento');},
+    menu_cardapio:function(){return $$('#nMenu>span:not(.nav-icon)');},
+    menu_pedidos:function(){return $$('#nOrders>span:not(.nav-icon)');},
+    menu_carrinho:function(){return $$('#nCart>span:not(.nav-icon):not(.nav-badge)').slice(0,1);},
+    menu_config:function(){return $$('#settingsFab>span:not(.nav-icon)');},
+    botao_adicionar:function(){return $$('.product .add');},
+    voltar_carrinho:function(){return $$('#checkout .back');},
+    aviso_conferir:function(){return $$('#checkout .container>.notice');},
+    botao_enviar_pedido:function(){return $$('.baruki-send-order');},
+    limpar_carrinho:function(){return $$('#cartContent [onclick*="clearCart"]');},
+    carrinho_vazio:function(){return $$('#cartContent .empty p');},
+    botao_ver_cardapio:function(){return $$('#cartContent .empty .btn');},
+    texto_meus_pedidos:function(){return $$('#orders .notice');},
+    pedidos_vazio:function(){return $$('#ordersContent .orders-empty strong');},
+    modo_dia:function(){return [$('#themeDayOption')];},
+    modo_noite:function(){return [$('#themeNightOption')];}
+  };
+  function setName(el,v){
+    if(!el)return;
+    var t=textNode(el);
+    if(t){
+      if(el.dataset.bkNm===undefined)el.dataset.bkNm=t.nodeValue;
+      var want=v?' '+v+' ':el.dataset.bkNm;
+      if(t.nodeValue!==want)t.nodeValue=want;
+      return;
+    }
+    var s=el.querySelector('strong,span:not([class*="icon"]):not(.nav-badge)');
+    setTxt(s||el,v);
+  }
+  function applyNames(){
+    if(!S.aj)return;
+    Object.keys(NAMES).forEach(function(k){
+      var o=S.aj[k],v=(o&&effSt(k)!=='DESATIVADO'&&o.nome)?o.nome:'';
+      var els=[];try{els=NAMES[k]();}catch(e){}
+      els.forEach(function(el){setName(el,v);});
+    });
+    var o=S.aj.busca,inp=$('#barukiMenuSearch');
+    if(inp){
+      if(inp.dataset.bkPh===undefined)inp.dataset.bkPh=inp.getAttribute('placeholder')||'';
+      var want=(o&&effSt('busca')!=='DESATIVADO'&&o.nome)?o.nome:inp.dataset.bkPh;
+      if(inp.getAttribute('placeholder')!==want)inp.setAttribute('placeholder',want);
+    }
+  }
+  function buildCSS(){
+    var css='';
+    Object.keys(SEL).forEach(function(k){
+      var s=SEL[k].map(function(x){return 'html.bk-off-'+k+' '+x;}).concat(['html.bk-off-'+k+' .bk-k-'+k]);
+      css+=s.join(',')+'{display:none!important}\n';
+    });
+    css+='html.bk-off-rodape_banner #barukiRodapeBanner,html.bk-off-rodape_banner #barukiRodapeEspaco{display:none!important}\n';
+    Object.keys(S.aj).forEach(function(k){
+      var v=S.aj[k];if(!SEL[k])return;
+      var sel=SEL[k].concat(['.bk-k-'+k]).map(function(x){return BOOST+x;}).join(',');
+      var cc=colorOf(v.cor),sz=sizeCss(v.tam);
+      if(cc)css+=sel+'{color:'+cc+'!important}\n';
+      if(sz)css+=sel+'{font-size:'+sz+'!important}\n';
+    });
+    return css;
+  }
+  function applyAj(rows){
+    var cols=null,n=0,next={};
+    rows.forEach(function(r){
+      var h=r.map(plain);
+      if(h.indexOf('CHAVE')>-1&&h.indexOf('STATUS')>-1){
+        cols=h.indexOf('COR FINAL')>-1?{k:h.indexOf('CHAVE'),s:h.indexOf('STATUS'),n:h.indexOf('NOME / NUMERO / LINK'),c:h.indexOf('COR FINAL'),z:h.indexOf('TAMANHO FINAL')}:null;
+        return;
+      }
+      if(!cols)return;
+      var k=String(r[cols.k]||'').trim().toLowerCase();
+      if(!k)return;
+      next[k]={st:plain(r[cols.s]),nome:String(cols.n>-1?r[cols.n]||'':'').trim(),cor:String(r[cols.c]||'').trim(),tam:String(r[cols.z]||'').trim()};
+      n++;
+    });
+    if(n<5)return false;   /* aba ausente/incompleta: não muda nada */
+    S.aj=next;S.master=masterOf(rows);
+    Object.keys(SEL).forEach(function(k){root.classList.toggle('bk-off-'+k,effSt(k)==='DESATIVADO');});
+    styleEl('bk-v2-aj').textContent=buildCSS();
+    tag();applyNames();masterExtras();
+    var ns=next.nome_site;
+    if(ns&&effSt('nome_site')!=='DESATIVADO'&&ns.nome){
+      var b=$('.header .brand');
+      if(b&&b.dataset.bk!==ns.nome){
+        var w=ns.nome.split(/\s+/),lastW=w.pop();
+        b.innerHTML=(w.length?esc(w.join(' '))+' ':'')+'<span>'+esc(lastW)+'</span>';
+        b.dataset.bk=ns.nome;
+      }
+    }
+    if(effSt('campo_nome')==='DESATIVADO'){var cn=$('#clientName');if(cn&&!cn.value)cn.value='Cliente';}
+    return true;
+  }
+  window.BarukiAj={off:function(k){var o=S.aj[k];return !!(o&&o.st==='DESATIVADO');}};
+
+  /* ---------- 2) Remoto: textos, banners, rodapé, entrega, categorias, CSS extra ---------- */
+  function setTxt(el,v){
+    if(!el)return;
+    if(el.dataset.bkOrig===undefined)el.dataset.bkOrig=el.textContent;
+    var want=v||el.dataset.bkOrig;
+    if(el.textContent!==want)el.textContent=want;
+  }
+  function feeText(base,p){return isNaN(p)?base:base+' — R$ '+p.toFixed(2).replace('.',',');}
+  function applyFee(id,base,val){
+    var lab=document.getElementById(id);if(!lab)return;
+    var inp=lab.querySelector('input'),t=textNode(lab);if(!inp||!t)return;
+    if(lab.dataset.bkP0===undefined){lab.dataset.bkP0=inp.dataset.price;lab.dataset.bkT0=t.nodeValue;}
+    var p=(val===''||val==null)?NaN:money(val);
+    var wantP=isNaN(p)?lab.dataset.bkP0:String(p);
+    var wantT=isNaN(p)?lab.dataset.bkT0:' '+feeText(base,p);
+    if(lab.dataset.orig!==undefined)lab.dataset.orig=wantT;
+    if(t.nodeValue!==wantT)t.nodeValue=wantT;
+    if(inp.dataset.price!==wantP){inp.dataset.price=wantP;if(inp.checked){try{delivery(inp);}catch(e){}}}
+  }
+  function applyTexts(){
+    var R=S.rem;if(!R||!R.__ok)return;
+    var v=function(k){return R[k]?R[k].v:'';};
+    var frase=v('mensagem_biblica_texto'),fr=$('#mensagemBiblicaFrase');
+    if(fr){
+      var carregando=/^Carregando/i.test(fr.textContent);
+      if(frase&&!carregando){
+        if(fr.dataset.bkCustom!=='1'){fr.dataset.bkDaily=fr.textContent;fr.dataset.bkCustom='1';}
+        if(fr.textContent!==frase)fr.textContent=frase;
+      }else if(!frase&&fr.dataset.bkCustom==='1'){
+        fr.textContent=fr.dataset.bkDaily||fr.textContent;fr.dataset.bkCustom='';
+      }
+      ['.mbd-ref','.mbd-data'].forEach(function(s){var e=$('#mensagemBiblicaDiaria '+s);if(e)e.style.display=fr.dataset.bkCustom==='1'?'none':'';});
+    }
+    setTxt($('.baruki-info-head p'),v('informacoes_texto'));
+    var ps=$$('#avisoSiteTesteOverlay p');
+    if(ps[0])setTxt(ps[0],v('site_em_teste_texto'));
+    if(ps[1])ps[1].style.display=v('site_em_teste_texto')?'none':'';
+    setTxt($('.baruki-manutencao-texto'),v('manutencao_texto'));
+    var m=parseInt(v('cronometro_preparo_minutos'),10);
+    window.__barukiPrepMin=(m>0&&m<=600)?m:0;
+    window.__barukiMsgAbertura=v('mensagem_pedido_abertura').slice(0,300);
+    window.__barukiMsgFinal=v('mensagem_pedido_final').slice(0,300);
+    applyFee('optFloriano','Entrega Floriano',v('taxa_entrega_floriano'));
+    applyFee('optNovaFloresta','Entrega Nova Floresta',v('taxa_entrega_nova_floresta'));
+  }
+  function bannerRodapeOff(){
+    var b=S.rem&&S.rem.banner_rodape;
+    if(S.master==='DESATIVADO')return true;
+    if(S.master==='ATIVADO')return false;
+    return !!(b&&b.st==='DESATIVADO');
+  }
+  function masterExtras(){
+    try{
+      if(S.rem&&S.rem.__ok){
+        if(S.rem.banner_rodape)root.classList.toggle('bk-off-rodape_banner',bannerRodapeOff());
+        applyRodapeTexto(S.rem);
+      }
+    }catch(e){}
+    try{renderMsgs();}catch(e){}
+  }
+  function applyRodapeTexto(R){
+    var r=R.rodape,el=document.getElementById('bkRodape');
+    var rst=S.master==='DESATIVADO'?'DESATIVADO':(S.master==='ATIVADO'?'ATIVADO':(r?r.st:''));
+    if(!r||rst!=='ATIVADO'||!r.v){if(el)el.style.display='none';return;}
+    if(!el){el=document.createElement('footer');el.id='bkRodape';document.body.appendChild(el);}
+    el.style.display='';el.textContent=r.v;
+    el.style.background=colorOf(R.rodape_cor&&R.rodape_cor.v);
+    el.style.color=colorOf(R.rodape_cor_letra&&R.rodape_cor_letra.v);
+  }
+  function applyRegs(regs){
+    var after=document.getElementById('optNovaFloresta');if(!after)return;
+    var act=regs.filter(function(g){return g.nome&&g.st!=='DESATIVADO';});
+    var sig=JSON.stringify(act);
+    if(S.regSig===sig)return;
+    S.regSig=sig;
+    $$('.bk-regiao').forEach(function(x){
+      var i=x.querySelector('input');
+      if(i&&i.checked){i.checked=false;try{selectedDelivery=null;updateCheckout();}catch(e){}}
+      x.remove();
+    });
+    var anchor=after;
+    act.forEach(function(g){
+      var p=g.taxa===''?NaN:money(g.taxa);
+      var lab=document.createElement('label');lab.className='option bk-regiao';lab.id='optRegiao_'+g.k;
+      var inp=document.createElement('input');inp.type='radio';inp.name='delivery';inp.value=g.nome;
+      inp.dataset.price=isNaN(p)?'0':String(p);inp.setAttribute('onchange','delivery(this)');
+      lab.appendChild(inp);lab.appendChild(document.createTextNode(' '+feeText('Entrega '+g.nome,p)));
+      anchor.parentNode.insertBefore(lab,anchor.nextSibling);anchor=lab;
+    });
+  }
+  var CATMAP={lanches:'lanches',porcoes:'porcoes',pasteis:'pastel',pastel:'pastel',bebidas:'bebidas',pizza:'pizzas',pizzas:'pizzas',cachorrao:'cachorro',cachorro:'cachorro',promocao:'promocao',promocoes:'promocao'};
+  function slugOf(name){
+    var n=plain(name).toLowerCase();
+    return CATMAP[n]||('x_'+n.replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''));
+  }
+  function applyCats(){
+    var off={};
+    Object.keys(S.cats).forEach(function(n){if(S.cats[n]==='DESATIVADO')off[slugOf(n)]=1;});
+    var first=null,hiddenActive=false;
+    $$('#categories .cat').forEach(function(b){
+      var m=(b.getAttribute('onclick')||'').match(/selectCategory\('([^']+)'\)/),slug=m&&m[1];
+      var hide=!!(slug&&off[slug]);
+      b.style.display=hide?'none':'';
+      if(hide&&b.classList.contains('active'))hiddenActive=true;
+      if(!hide&&!first)first=b;
+    });
+    if(hiddenActive&&first){try{first.click();}catch(e){}}
+  }
+  function cleanCSS(t){
+    t=String(t||'').slice(0,8000);
+    if(/<\/?style|@import|expression\s*\(|javascript:|behavior\s*:|-moz-binding/i.test(t))return '';
+    return t;
+  }
+  function applyRem(rows){
+    var R={__ok:true},regs=[],cats={},n=0;
+    rows.forEach(function(r){
+      var k=String(r[3]||'').trim().toLowerCase();if(!k)return;
+      n++;
+      var st=plain(r[1]),a=String(r[0]||'').trim(),v=String(r[2]||'').trim();
+      if(k==='categoria_ativa'){if(a)cats[a]=st;return;}
+      if(/^entrega_regiao_\d$/.test(k)){regs.push({nome:a,st:st,taxa:v,k:k});return;}
+      R[k]={st:st,v:v};
+    });
+    if(n<8)return false;
+    S.rem=R;S.cats=cats;
+    S.bl=[];for(var i=1;i<=8;i++)S.bl.push(R['banner_'+i+'_link']?https(R['banner_'+i+'_link'].v):'');
+    S.rodLink=R.banner_rodape_link?https(R.banner_rodape_link.v):'';
+    if(R.banner_rodape){
+      window.__barukiRodapeLink=https(R.banner_rodape.v)||'';
+      root.classList.toggle('bk-off-rodape_banner',bannerRodapeOff());
+    }
+    var cx=R.css_extra;
+    styleEl('bk-css-extra').textContent=(cx&&cx.st==='ATIVADO')?cleanCSS(cx.v):'';
+    applyTexts();applyRodapeTexto(R);applyRegs(regs);applyCats();
+    return true;
+  }
+
+  /* ---------- 3) Imagens dos produtos ---------- */
+  function applyImgsCsv(rows){
+    var map={},n=0;
+    rows.forEach(function(r){
+      var nome=norm(r[0]),u=https(r[2]);
+      if(!nome||nome==='PRODUTO')return;
+      n++;if(u)map[nome]=u;
+    });
+    if(n<5)return false;
+    S.imgs=map;applyImgs();return true;
+  }
+  function applyImgs(){
+    if(!S.imgs)return;
+    $$('#products .product').forEach(function(card){
+      var h=card.querySelector('h3');if(!h)return;
+      var u=S.imgs[norm(h.textContent)];
+      var f=card.firstElementChild,cur=f&&f.classList.contains('bk-prod-img')?f:null;
+      if(!u){if(cur)cur.remove();return;}
+      if(cur){if(cur.getAttribute('src')!==u)cur.src=u;return;}
+      var im=document.createElement('img');
+      im.className='bk-prod-img';im.alt='';im.loading='lazy';im.referrerPolicy='no-referrer';
+      im.onerror=function(){im.remove();};
+      im.src=u;card.insertBefore(im,card.firstChild);
+    });
+  }
+
+  /* ---------- 3b) Mensagens escritas: pop-up de boas-vindas e faixa de aviso (aba Mensagens) ---------- */
+  function hashOf(t){var h=0,i;for(i=0;i<t.length;i++){h=((h<<5)-h+t.charCodeAt(i))|0;}return String(h);}
+  function msgOn(m){
+    if(!m||!m.txt)return false;
+    if(S.master==='DESATIVADO')return false;
+    if(S.master==='ATIVADO')return true;
+    return m.st==='ATIVADO';
+  }
+  function applyMsgs(rows){
+    var out={},n=0;
+    rows.forEach(function(r){
+      var k=String(r[3]||'').trim().toLowerCase();
+      if(k!=='msg_boasvindas'&&k!=='msg_faixa')return;
+      out[k]={st:plain(r[1]),txt:String(r[2]||'').trim(),fundo:String(r[4]||'').trim(),letra:String(r[5]||'').trim(),tam:String(r[6]||'').trim(),exibir:plain(r[7]),titulo:String(r[8]||'').trim()};
+      n++;
+    });
+    if(n<1)return false;
+    S.msg=out;renderMsgs();return true;
+  }
+  function renderMsgs(){
+    var M=S.msg;if(!M)return;
+    var f=document.getElementById('bkMsgFaixa'),mf=M.msg_faixa;
+    if(msgOn(mf)){
+      if(!f){
+        f=document.createElement('div');f.id='bkMsgFaixa';f.setAttribute('role','status');
+        var menu=document.getElementById('menu');
+        if(menu)menu.insertBefore(f,menu.firstChild);else if(document.body)document.body.insertBefore(f,document.body.firstChild);
+      }
+      if(f.textContent!==mf.txt)f.textContent=mf.txt;
+      f.style.display='';
+      f.style.background=colorOf(mf.fundo)||'#F97316';
+      f.style.color=colorOf(mf.letra)||'#FFFFFF';
+      f.style.fontSize=sizeCss(mf.tam)||'15px';
+    }else if(f)f.style.display='none';
+    var p=document.getElementById('bkMsgPopup'),mp=M.msg_boasvindas;
+    if(!msgOn(mp)){if(p)p.classList.remove('on');return;}
+    var sig=mp.titulo+'|'+mp.txt;
+    if(!p){
+      p=document.createElement('div');p.id='bkMsgPopup';p.setAttribute('role','dialog');p.setAttribute('aria-modal','true');
+      p.innerHTML='<div class="bkmp-box"><div class="bkmp-title"></div><div class="bkmp-text"></div><button type="button" class="bkmp-ok">OK</button></div>';
+      p.addEventListener('click',function(e){
+        if(e.target===p||e.target.closest('.bkmp-ok')){
+          p.classList.remove('on');
+          try{sessionStorage.setItem('bk_msg_'+hashOf(p.dataset.sig||''),'1');}catch(x){}
+        }
+      });
+      (document.body||root).appendChild(p);
+    }
+    var box=p.querySelector('.bkmp-box'),ti=p.querySelector('.bkmp-title'),tx=p.querySelector('.bkmp-text');
+    p.dataset.sig=sig;
+    ti.textContent=mp.titulo;ti.style.display=mp.titulo?'':'none';
+    tx.textContent=mp.txt;
+    box.style.background=colorOf(mp.fundo)||'#1F2937';
+    box.style.color=colorOf(mp.letra)||'#FFFFFF';
+    tx.style.fontSize=sizeCss(mp.tam)||'18px';
+    if(S.popupShown)return;
+    var uma=mp.exibir.indexOf('UMA')>-1,seen=false;
+    try{seen=sessionStorage.getItem('bk_msg_'+hashOf(sig))==='1';}catch(x){}
+    S.popupShown=true;
+    if(uma&&seen)return;
+    var show=function(){
+      if(!msgOn(S.msg&&S.msg.msg_boasvindas))return;
+      try{if(window.BarukiControle&&window.BarukiControle.get('manutencao')===true&&sessionStorage.getItem('baruki_manutencao_liberada')!=='1')return;}catch(x){}
+      p.classList.add('on');
+    };
+    var pr=window.BarukiPrioridade&&window.BarukiPrioridade.avisos;
+    if(pr&&pr.then)pr.then(function(){setTimeout(show,300);});else setTimeout(show,1500);
+  }
+
+  /* ---------- 4) Site: tema, cores, fonte e tamanhos ---------- */
+  var RULES={
+    cor_fundo:['html body,html body.day-theme,#menu,#menu>.container,#cart,#orders,#checkout,#detail,#categories','background'],
+    cor_cartao:['.product,.cart-item,.order-card,.summary,.section,.pizza-flavor-card','background'],
+    cor_cabecalho:['.header','background'],
+    cor_letra_cabecalho:['.header,.header .brand,.header .brand span,.header .sub,.header .status,.header .order-message','color'],
+    cor_titulo:['.category-label,#menu h2,#cart h2,#orders h2,#checkout h2,.section h3','color'],
+    cor_produto:['.product h3,.cart-item .item-name','color'],
+    cor_descricao:['.product .desc,.item-details','color'],
+    cor_preco:['.product .price','color'],
+    cor_botao:['.btn,.product .add','background'],
+    cor_letra_botao:['.btn,.product .add','color'],
+    cor_promocao:['#barukiPromoBanner .bpb-new,.promo-cat .category-label','color'],
+    cor_borda:['.product,.cart-item,.order-card,.summary,.section,.option','border-color']
+  };
+  var SIZES={tamanho_letra:'.desc,.item-details,.category-label,.option',tamanho_logo:'.header .brand'};
+  /* Tamanhos que aceitam px (Px20, 20px ou 20) ou % (120%). Chaves da aba Site:
+     tamanho_produto, tamanho_preco (valores), tamanho_descricao, tamanho_ingredientes */
+  var PXSIZES={
+    tamanho_produto:['.product h3','.panel.detail>h2','.cart-item .item-name'],
+    tamanho_preco:['.product .price','.panel.detail>.price'],
+    tamanho_descricao:['.product .desc','.panel.detail>.muted'],
+    tamanho_ingredientes:['.toggle','.toggle-box .option','.toggle-box .option span','.toggle-box .smallhelp','.item-details']
+  };
+  /* prefixo que "vence" regras antigas com #id e !important (o :is() conta como 2 ids, sem precisar existir) */
+  var BOOST='html body:is(#bkx,body):is(#bkx,body) ';
+  var PXPFX=BOOST+':is(#menu,#detail,#cart,#orders,#checkout) ';
+  function parseSize(o){
+    var src=[o.c,o.v];
+    for(var i=0;i<2;i++){
+      var s=String(src[i]==null?'':src[i]).trim().toLowerCase().replace(',','.');
+      if(!s)continue;
+      var m=s.match(/^(\d{2,3})\s*%$/);
+      if(m){var pc=parseInt(m[1],10);if(pc===100)continue;if(pc>=50&&pc<=300)return{t:'%',n:pc};continue;}
+      m=s.match(/^(?:px\s*)?(\d{1,2}(?:\.\d+)?)(?:\s*px)?$/);
+      if(m){var n=parseFloat(m[1]);if(n>=8&&n<=60)return{t:'px',n:n};}
+    }
+    return null;
+  }
+  var FONTS={Nunito:'Nunito:wght@400;700;900',Poppins:'Poppins:wght@400;600;700',Georgia:'',Arial:''};
+  function applySite(rows){
+    var K={};
+    rows.forEach(function(r){var k=String(r[3]||'').trim().toLowerCase();if(k)K[k]={v:String(r[1]||'').trim(),c:String(r[2]||'').trim()};});
+    if(!K.tema)return false;
+    var colored=['AZUL','VERDE','ROXO','PRETO E DOURADO'].indexOf(plain(K.tema.v))>-1;
+    var css='';
+    Object.keys(RULES).forEach(function(k){
+      var o=K[k];if(!o)return;
+      var hex=/^#[0-9a-f]{6}$/i.test(o.c)?o.c:(/^#[0-9a-f]{6}$/i.test(o.v)?o.v:'');
+      if(!hex)return;
+      if(plain(o.v)==='DO TEMA'&&!colored)return;   /* Claro/Escuro: o site continua com o modo dia/noite de sempre */
+      css+=RULES[k][0]+'{'+RULES[k][1]+':'+hex+'!important}\n';
+    });
+    var f=K.fonte;
+    if(f&&plain(f.v)!=='PADRAO'&&FONTS.hasOwnProperty(f.c)){
+      if(FONTS[f.c]&&!document.getElementById('bk-font')){var l=document.createElement('link');l.id='bk-font';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+FONTS[f.c]+'&display=swap';document.head.appendChild(l);}
+      css+='body,button,input,select,textarea{font-family:"'+f.c+'",sans-serif!important}\n';
+    }
+    Object.keys(SIZES).forEach(function(k){
+      var o=K[k],m=o&&o.c.match(/^(\d{2,3})%$/);
+      if(m&&m[1]!=='100')css+=SIZES[k]+'{zoom:'+(parseInt(m[1],10)/100)+'}\n';
+    });
+    Object.keys(PXSIZES).forEach(function(k){
+      var o=K[k];if(!o)return;
+      var z=parseSize(o);if(!z)return;
+      var sels=PXSIZES[k];
+      if(z.t==='%')css+=sels.join(',')+'{zoom:'+(z.n/100)+'}\n';
+      else css+=sels.map(function(x){return PXPFX+x;}).join(',')+'{font-size:'+z.n+'px!important}\n';
+    });
+    styleEl('bk-v2-site').textContent=css;
+    return true;
+  }
+
+  /* ---------- estilos próprios, observadores e leitura periódica ---------- */
+  styleEl('bk-v2-base').textContent=
+    '#bkMsgFaixa{margin:10px 12px 0;padding:10px 14px;border-radius:12px;text-align:center;font-weight:800;line-height:1.35;white-space:pre-line}\n'+
+    '#bkMsgPopup{position:fixed;inset:0;z-index:1000003;display:none;align-items:center;justify-content:center;padding:22px;box-sizing:border-box;background:rgba(0,0,0,.66)}\n'+
+    '#bkMsgPopup.on{display:flex}\n'+
+    '#bkMsgPopup .bkmp-box{width:min(380px,100%);border-radius:20px;padding:24px 20px 18px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.18)}\n'+
+    '#bkMsgPopup .bkmp-title{font-size:22px;font-weight:900;margin:0 0 10px;line-height:1.2}\n'+
+    '#bkMsgPopup .bkmp-text{line-height:1.45;font-weight:700;white-space:pre-line;margin:0 0 18px}\n'+
+    '#bkMsgPopup .bkmp-ok{border:0;border-radius:14px;padding:13px 34px;font-size:16px;font-weight:900;background:#F32618;color:#fff;cursor:pointer;font-family:inherit}\n'+
+    '.bk-prod-img{display:block;width:100%;height:130px;object-fit:cover;border-radius:12px;margin:0 0 8px}\n'+
+    '#bkRodape{margin:18px 12px 96px;padding:14px;border-radius:14px;text-align:center;font-size:13px;line-height:1.45;white-space:pre-line;background:var(--card,#1a1a1a);color:var(--white,#fff);border:1px solid var(--line,#333)}\n';
+  var BANNER_IDS=['334897','334898','334899','334900','334901','334902','334903','334904'];
+  document.addEventListener('click',function(e){
+    var t=e.target;if(!t||!t.closest)return;
+    var sl=t.closest('#barukiBannerTrack .baruki-banner-slide');
+    if(sl){
+      var m=String(sl.dataset.bUrl||'').match(/\/(\d+)_ico\.png/),i=m?BANNER_IDS.indexOf(m[1]):-1;
+      if(i>-1&&S.bl[i])window.open(S.bl[i],'_blank','noopener');
+      return;
+    }
+    if(S.rodLink&&t.closest('#barukiRodapeBanner'))window.open(S.rodLink,'_blank','noopener');
+  },true);
+
+  var TABS={Controle:applyAj,Remoto:applyRem,Imagens:applyImgsCsv,Site:applySite,Mensagens:applyMsgs};
+  function load(tab){
+    fetch(url(tab),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(csv){
+      if(csv===last[tab])return;
+      var ok=false;try{ok=TABS[tab](parseCSV(csv))!==false;}catch(e){console.error('[Planilha v2] '+tab,e);}
+      if(ok){last[tab]=csv;try{localStorage.setItem('bk3_'+tab,csv);}catch(e){}}
+      else console.warn('[Planilha v2] aba "'+tab+'" ausente ou incompleta — nada foi alterado.');
+    }).catch(function(e){console.warn('[Planilha v2] não foi possível carregar "'+tab+'" — mantendo o estado atual.',e);});
+  }
+  function tick(){if(document.hidden)return;Object.keys(TABS).forEach(load);}
+  Object.keys(TABS).forEach(function(tab){
+    try{var c=localStorage.getItem('bk3_'+tab);if(c){TABS[tab](parseCSV(c));last[tab]=c;}}catch(e){}
+  });
+  function ready(){tag();applyTexts();applyNames();applyCats();applyImgs();renderMsgs();}
+  document.addEventListener('DOMContentLoaded',ready);window.addEventListener('load',ready);
+  try{
+    var cat=document.getElementById('categories');
+    if(cat)new MutationObserver(function(){applyCats();}).observe(cat,{childList:true});
+    var prods=document.getElementById('products'),raf=0;
+    if(prods)new MutationObserver(function(){if(raf)return;raf=requestAnimationFrame(function(){raf=0;applyImgs();applyNames();});}).observe(prods,{childList:true,subtree:true});
+  }catch(e){}
+  tick();
+  setInterval(tick,6000);
+  setInterval(function(){try{applyTexts();applyNames();}catch(e){}},3000);   /* reaplica textos caso outro bloco os reescreva */
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)tick();});
+})();
+</script>
+<!-- ===== FIM PLANILHA v2 ===== -->
 </body>
 </html>
