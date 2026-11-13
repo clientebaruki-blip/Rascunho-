@@ -2083,10 +2083,10 @@ html.ctl-mbiblica-off #mensagemBiblicaDiaria{display:none!important}
    Se a aba não carregar, nada muda: o site segue como está (usa o último estado salvo no aparelho). */
 (function(){
   'use strict';
-  var SHEET_ID='1wX152r1IwYKem5JJd7_WWGzbLAwfV2I8gPAIqfpeV8U';
+  var SHEET_ID='1yyNIjPGlE5UTmA3aL7KPpq7FEnEwvF-1TYd0y09EcbI';
   var SHEET_TAB='Controle';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
-  var CACHE_KEY='baruki_controle_cache_v5';
+  var CACHE_KEY='baruki_controle_cache_v6';
   var KEYS=['loja','aviso_1','aviso_2','banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','natal','manutencao','logo_categorias','banner_sobe','promocao','atualizar_site','comer_no_local','som_clique','cronometro_preparo','mensagem_biblica','site_em_teste','informacoes','aparencia','salvar_nome','nome_site','retirada_balcao','entrega','entrega_floriano','entrega_nova_floresta','forma_pagamento','pix','cartao','dinheiro','menu_inferior','menu_cardapio','menu_pedidos','menu_carrinho','menu_config','selo_loja','janela_config','bloco_contato','busca','barra_categorias','botao_adicionar','seletor_quantidade','voltar_carrinho','aviso_conferir','campo_nome','titulo_entrega','botao_enviar_pedido','limpar_carrinho','carrinho_vazio','botao_ver_cardapio','aviso_carrinho_limpo','texto_meus_pedidos','pedidos_vazio','modo_dia','modo_noite','instagram','whatsapp_contato','whatsapp_pedido','todas_funcoes'];
   /* CHAVE GERAL (linha 3 da aba Controle): ATIVADO = liga tudo, DESATIVADO = desliga tudo, AUTOMÁTICO = cada função segue o seu STATUS.
      Não mexe em: loja aberta/fechada, manutenção e Natal. */
@@ -2424,6 +2424,19 @@ html.ctl-mbiblica-off #mensagemBiblicaDiaria{display:none!important}
   </div>
   <div class="baruki-banner-dots" id="barukiBannerDots" aria-label="Selecionar banner"></div>
 </section>
+<style id="online-discreto-style">
+#onlineDiscreto{position:relative;margin:2px 0 0;min-height:10px;line-height:0}
+#onlineDiscretoBtn{display:inline-block;width:18px;height:12px;padding:0;margin:0 0 0 4px;border:0;background:transparent;color:#fff;opacity:.13;font-size:8px;line-height:12px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
+#onlineDiscreto.aberto #onlineDiscretoBtn{transform:rotate(180deg)}
+#onlineDiscretoBox{display:none;line-height:normal;padding:2px 0}
+#onlineDiscreto.aberto #onlineDiscretoBox{display:block}
+</style>
+<div id="onlineDiscreto">
+  <button id="onlineDiscretoBtn" type="button" aria-label="." onclick="document.getElementById('onlineDiscreto').classList.toggle('aberto')">&#9660;</button>
+  <div id="onlineDiscretoBox">
+<script id="_waubl2">var _wau = _wau || []; _wau.push(["dynamic", "fm0z84rdlg", "bl2", "c4302bffffff", "small"]);</script><script async src="//waust.at/d.js"></script>
+  </div>
+</div>
 
 
 <style id="mensagem-biblica-diaria-style">
@@ -9021,10 +9034,10 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    Se a planilha não carregar, o cardápio atual continua funcionando.
    ========================================================= */
 (function(){
-  var SHEET_ID='1wX152r1IwYKem5JJd7_WWGzbLAwfV2I8gPAIqfpeV8U';
+  var SHEET_ID='1yyNIjPGlE5UTmA3aL7KPpq7FEnEwvF-1TYd0y09EcbI';
   var SHEET_TAB='Cardápio';
   var SHEET_URL='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
-  var CACHE_KEY='baruki_planilha_cache_v8';
+  var CACHE_KEY='baruki_planilha_cache_v9';
   var CATS={promocao:'promocao',promocoes:'promocao',lanches:'lanches',cachorrao:'cachorro',cachorro:'cachorro',porcoes:'porcoes',bebidas:'bebidas',pizza:'pizzas',pizzas:'pizzas',pasteis:'pastel',pastel:'pastel'};
 
   // Aceita variações como "Pizza Doce", "Pizza Salgada", "Pastéis", "Pastel Doce"...
@@ -9708,7 +9721,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    Se a aba não carregar, nada muda. */
 (function(){
   'use strict';
-  var SHEET_ID='1wX152r1IwYKem5JJd7_WWGzbLAwfV2I8gPAIqfpeV8U';
+  var SHEET_ID='1yyNIjPGlE5UTmA3aL7KPpq7FEnEwvF-1TYd0y09EcbI';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Pedido');
   var MAP={comer_no_local:'optComerNoLocal',retirada_balcao:'optRetiradaBalcao',entrega_floriano:'optFloriano',
            entrega_nova_floresta:'optNovaFloresta',pix:'optPix',cartao:'optCartao',dinheiro:'optDinheiro'};
@@ -9802,7 +9815,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    Se a aba não carregar ou o valor for inválido, nada muda. */
 (function(){
   'use strict';
-  var SHEET_ID='1wX152r1IwYKem5JJd7_WWGzbLAwfV2I8gPAIqfpeV8U';
+  var SHEET_ID='1yyNIjPGlE5UTmA3aL7KPpq7FEnEwvF-1TYd0y09EcbI';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Contatos');
   var last='',busy=false;
   function plain(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toUpperCase();}
@@ -9868,7 +9881,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    ========================================================= */
 (function(){
   'use strict';
-  var SHEET_ID='1wX152r1IwYKem5JJd7_WWGzbLAwfV2I8gPAIqfpeV8U';
+  var SHEET_ID='1yyNIjPGlE5UTmA3aL7KPpq7FEnEwvF-1TYd0y09EcbI';
   var root=document.documentElement;
   var S={aj:{},rem:{},bl:[],rodLink:'',cats:{},imgs:null};
   var last={};
@@ -9909,6 +9922,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
     cronometro_preparo:['#prepTimerToggle','.prep-timer-slot'],
     mensagem_biblica:['#mensagemBiblicaDiaria','#mensagemBiblicaToggle'],
     site_em_teste:['#siteEmTesteBtn'],
+    clientes_online:['#onlineDiscreto'],
     informacoes:['.settings-info-btn'],
     aparencia:['.theme-options'],
     salvar_nome:[],
