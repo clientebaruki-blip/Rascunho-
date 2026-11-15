@@ -11209,13 +11209,11 @@ if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',function(){saf
   #barukiPainel .bp-box{max-height:92dvh}
   #barukiVideo .bv-box,#barukiVideo video{max-height:88dvh}
 }
-/* 2) Status da loja (bolinha pulsando + LOJA ABERTA + ESTAMOS ATENDENDO): tudo numa linha, sem cortar */
-@media(max-width:600px){
-  .header .status,.status{overflow:visible!important;min-width:0!important;max-width:100%!important;padding:7px 8px 7px 14px!important;box-sizing:border-box!important}
-  .status-line{flex-wrap:nowrap!important;gap:5px!important;min-width:0!important;max-width:100%!important;justify-content:center!important}
-  /* espaço para o anel da pulsação não ser cortado na borda */
-  .status-line .dot,#statusDot{margin:0 5px 0 5px!important;flex:0 0 10px!important}
-  .status-line #statusText,.attending-message{font-size:clamp(9.5px,2.95vw,13px)!important;padding:6px 8px!important;letter-spacing:.1px!important;white-space:nowrap!important;min-width:0!important;flex:0 1 auto!important;transform:none!important;margin-left:0!important}
+/* 2) Cabeçalho: texto de status/horário pode quebrar linha em iPhone, sem ficar cortado */
+@media(max-width:430px){
+  .status{max-width:100%}
+  .status-line{min-width:0!important}
+  .status-line #statusText,.store-hours,.attending-message{white-space:normal!important;overflow-wrap:anywhere;min-width:0!important;max-width:100%}
 }
 </style>
 
