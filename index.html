@@ -6201,7 +6201,7 @@ img, video, canvas, svg{
   initSound();
 
   /* Tema Dia / Noite */
-  const THEME_KEY='baruki_theme_v3';
+  const THEME_KEY='baruki_theme_v4';
   function applyTheme(theme){
     const day=theme==='day';
     document.body.classList.toggle('day-theme',day);
@@ -6218,7 +6218,7 @@ img, video, canvas, svg{
   function initTheme(){
     let saved=null;try{saved=localStorage.getItem(THEME_KEY)}catch(e){}
     if(saved==='day'||saved==='night') applyTheme(saved);
-    else { applyTheme('day'); try{localStorage.setItem(THEME_KEY,'day')}catch(e){} }
+    else { applyTheme('night'); try{localStorage.setItem(THEME_KEY,'night')}catch(e){} }
 
     V2.get('themeDayOption')?.addEventListener('click',()=>{
       applyTheme('day');
