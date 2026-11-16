@@ -2101,7 +2101,7 @@ html.ctl-mbiblica-off #mensagemBiblicaDiaria{display:none!important}
    Se a aba não carregar, nada muda: o site segue como está (usa o último estado salvo no aparelho). */
 (function(){
   'use strict';
-  var SHEET_ID='19WeDkILWeFsz6BxuNqnm9YVd8aBISqCraI8vmupQTNc';
+  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
   var SHEET_TAB='Controle';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
   var CACHE_KEY='baruki_controle_cache_v9';
@@ -6660,12 +6660,17 @@ function fecharConfiguracoesBaruki(){
   }
   function allUrls(){
     const ex=Array.isArray(window.BarukiBannerExtras)?window.BarukiBannerExtras:[];
-    const out=urls.slice();
-    for(let i=0;i<8;i++)out.push(fixUrl(ex[i]));
+    const out=[];
+    /* Banners 1 a 8: se houver link de imagem na planilha, ele substitui a imagem fixa; se vazio, usa a fixa. */
+    /* Planilha já carregada: link vazio = banner sai; link preenchido = banner entra. Planilha ainda não carregada: usa as imagens fixas. */
+    const planilhaCarregada=Array.isArray(window.BarukiBannerExtras);
+    for(let i=0;i<8;i++)out.push(planilhaCarregada?fixUrl(ex[i]):(fixUrl(ex[i])||urls[i]));
+    /* Banners 9 a 16: só aparecem se houver link na planilha. */
+    for(let i=8;i<16;i++)out.push(fixUrl(ex[i]));
     return out;
   }
   window.BarukiRemoteStoreStatus=null;
-  let banners=[], index=0, rotateTimer=null, pollTimer=null, startX=0, busy=false, primeiraCargaFeita=false;
+  let banners=[], index=0, rotateTimer=null, pollTimer=null, startX=0, busy=false, primeiraCargaFeita=false, pendente=false;
   function comLimite(p,ms){return Promise.race([p,new Promise(function(r){setTimeout(function(){r(null);},ms);})]);}
 
   async function readImage(url){
@@ -6781,7 +6786,8 @@ function fecharConfiguracoesBaruki(){
   window.moveBarukiBanner=function(step){window.showBarukiBanner(index+step);};
 
   async function refresh(){
-    if(busy||document.hidden)return;
+    if(document.hidden)return;
+    if(busy){pendente=true;return;} /* mudou na planilha durante uma checagem: repete assim que terminar */
     busy=true;
     try{
       // PRIORIDADE: os banners só começam depois da manutenção (1º) e liberam os avisos ao terminar (3º).
@@ -6873,6 +6879,7 @@ function fecharConfiguracoesBaruki(){
     }finally{
       busy=false;
       if(!primeiraCargaFeita){primeiraCargaFeita=true;if(window.BarukiPrioridade)window.BarukiPrioridade.bannersProntos();}
+      if(pendente){pendente=false;setTimeout(refresh,0);}
     }
   }
 
@@ -9108,7 +9115,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    ========================================================= */
 (function(){
   'use strict';
-  var SHEET_ID='19WeDkILWeFsz6BxuNqnm9YVd8aBISqCraI8vmupQTNc';
+  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Categorias');
   var KEY='baruki_catimgs_v1';
   var store={categorias:{},cardapio:{},remoto:{}},lastSig=null,lastCsv='',busy=false;
@@ -9280,7 +9287,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    Se a planilha não carregar, o cardápio atual continua funcionando.
    ========================================================= */
 (function(){
-  var SHEET_ID='19WeDkILWeFsz6BxuNqnm9YVd8aBISqCraI8vmupQTNc';
+  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
   var SHEET_TAB='Cardápio';
   var SHEET_URL='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
   var CACHE_KEY='baruki_planilha_cache_v12';
@@ -9968,7 +9975,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    Se a aba não carregar, nada muda. */
 (function(){
   'use strict';
-  var SHEET_ID='19WeDkILWeFsz6BxuNqnm9YVd8aBISqCraI8vmupQTNc';
+  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Pedido');
   var MAP={comer_no_local:'optComerNoLocal',retirada_balcao:'optRetiradaBalcao',entrega_floriano:'optFloriano',
            entrega_nova_floresta:'optNovaFloresta',pix:'optPix',cartao:'optCartao',dinheiro:'optDinheiro'};
@@ -10062,7 +10069,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    Se a aba não carregar ou o valor for inválido, nada muda. */
 (function(){
   'use strict';
-  var SHEET_ID='19WeDkILWeFsz6BxuNqnm9YVd8aBISqCraI8vmupQTNc';
+  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Contatos');
   var last='',busy=false;
   function plain(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toUpperCase();}
@@ -10128,7 +10135,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    ========================================================= */
 (function(){
   'use strict';
-  var SHEET_ID='19WeDkILWeFsz6BxuNqnm9YVd8aBISqCraI8vmupQTNc';
+  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
   var root=document.documentElement;
   var S={aj:{},rem:{},bl:[],rodLink:'',cats:{},imgs:null};
   var last={};
@@ -10464,15 +10471,14 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
     });
     if(n<8)return false;
     S.rem=R;S.cats=cats;
-    /* Banners 1 a 8: banner_N_link = link ao tocar no banner (imagem fixa no HTML).
-       Banners 9 a 16: banner_N_link (ou _imagem/_img/_url) = link da IMAGEM; link ao tocar = _clique/_destino (opcional). */
+    /* Banners 1 a 16: banner_N_link (ou _imagem/_img/_url) = link da IMAGEM (nos banners 1 a 8, vazio = imagem fixa do HTML).
+       Link ao tocar no banner = banner_N_clique (ou _destino), opcional. */
     function pk(names){for(var j=0;j<names.length;j++){var o=R[names[j]];if(o){var u=https(o.v);if(u)return {u:u,st:o.st,k:names[j]};}}return null;}
     S.bl=[];S.bimg=[];
     for(var i=1;i<=16;i++){
       var p='banner_'+i;
-      if(i<=8){var c=pk([p+'_link',p+'_clique',p+'_destino']);S.bl.push(c?c.u:'');continue;}
       var im=pk([p+'_imagem',p+'_img',p+'_foto',p+'_png',p+'_url',p+'_link',p]);
-      var cl=pk([p+'_clique',p+'_destino',p+'_site',p+'_link_clique'].concat(im&&im.k!==p+'_link'?[p+'_link']:[]));
+      var cl=pk([p+'_clique',p+'_destino',p+'_site',p+'_link_clique']);
       var off=im&&(im.st==='DESATIVADO'||(R[p]&&R[p].st==='DESATIVADO'));
       S.bimg.push(im&&!off?im.u:'');
       S.bl.push(cl?cl.u:'');
@@ -10705,6 +10711,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
   }catch(e){}
   tick();
   setInterval(tick,6000);
+  setInterval(function(){if(!document.hidden)load('Remoto');},2500);   /* links dos banners 1-16: troca quase em tempo real */
   setInterval(function(){try{applyTexts();applyNames();}catch(e){}},3000);   /* reaplica textos caso outro bloco os reescreva */
   document.addEventListener('visibilitychange',function(){if(!document.hidden)tick();});
 })();
@@ -10737,7 +10744,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    - Se a aba não carregar ou o vídeo falhar, nada mais no site é afetado. */
 (function(){
   'use strict';
-  var SHEET_ID='19WeDkILWeFsz6BxuNqnm9YVd8aBISqCraI8vmupQTNc';
+  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Vídeo');
   var KEY='video_mp4',SS_KEY='baruki_video_fechado';
   var last=null,busy=false,box=null,vid=null,msg=null,shownUrl='',dismissed='';
@@ -10978,7 +10985,7 @@ html.bkfx-ban-go #barukiBanner::after{animation:bkfxSheen calc(1.6s*var(--bkfx-b
 (function(){
 'use strict';
 if(window.__bkfxLoaded)return;window.__bkfxLoaded=true;
-var SID='19WeDkILWeFsz6BxuNqnm9YVd8aBISqCraI8vmupQTNc',TAB='Animações',LS='bkfx_cfg_v1',LS_THX='bkfx_thx';
+var SID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI',TAB='Animações',LS='bkfx_cfg_v1',LS_THX='bkfx_thx';
 var D=document,R=D.documentElement;
 var RM=false;try{RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);}catch(e){}
 var KEYS=['botoes','pizza','carrinho','mascote','produto','resumo','transicao','festa','banner'];
