@@ -2101,14 +2101,14 @@ html.ctl-mbiblica-off #mensagemBiblicaDiaria{display:none!important}
    Se a aba não carregar, nada muda: o site segue como está (usa o último estado salvo no aparelho). */
 (function(){
   'use strict';
-  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
+  var SHEET_ID='1OXSa_BOEBj7Fx40k9Orh9R-xb0yHp7rFgJP-UpOq7Ew';
   var SHEET_TAB='Controle';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
   var CACHE_KEY='baruki_controle_cache_v9';
-  var KEYS=['loja','aviso_1','aviso_2','banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','banner_9','banner_10','banner_11','banner_12','banner_13','banner_14','banner_15','banner_16','natal','manutencao','logo_categorias','banner_sobe','promocao','atualizar_site','comer_no_local','som_clique','cronometro_preparo','mensagem_biblica','site_em_teste','informacoes','aparencia','salvar_nome','nome_site','retirada_balcao','entrega','entrega_floriano','entrega_nova_floresta','forma_pagamento','pix','cartao','dinheiro','menu_inferior','menu_cardapio','menu_pedidos','menu_carrinho','menu_config','selo_loja','janela_config','bloco_contato','busca','barra_categorias','botao_adicionar','seletor_quantidade','voltar_carrinho','aviso_conferir','campo_nome','titulo_entrega','botao_enviar_pedido','limpar_carrinho','carrinho_vazio','botao_ver_cardapio','aviso_carrinho_limpo','texto_meus_pedidos','pedidos_vazio','modo_dia','modo_noite','instagram','whatsapp_contato','whatsapp_pedido','todas_funcoes'];
+  var KEYS=['loja','aviso_1','aviso_2','banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','banner_9','banner_10','banner_11','banner_12','banner_13','banner_14','banner_15','banner_16','banner_video','natal','manutencao','logo_categorias','banner_sobe','promocao','atualizar_site','comer_no_local','som_clique','cronometro_preparo','mensagem_biblica','site_em_teste','informacoes','aparencia','salvar_nome','nome_site','retirada_balcao','entrega','entrega_floriano','entrega_nova_floresta','forma_pagamento','pix','cartao','dinheiro','menu_inferior','menu_cardapio','menu_pedidos','menu_carrinho','menu_config','selo_loja','janela_config','bloco_contato','busca','barra_categorias','botao_adicionar','seletor_quantidade','voltar_carrinho','aviso_conferir','campo_nome','titulo_entrega','botao_enviar_pedido','limpar_carrinho','carrinho_vazio','botao_ver_cardapio','aviso_carrinho_limpo','texto_meus_pedidos','pedidos_vazio','modo_dia','modo_noite','instagram','whatsapp_contato','whatsapp_pedido','todas_funcoes'];
   /* CHAVE GERAL (linha 3 da aba Controle): ATIVADO = liga tudo, DESATIVADO = desliga tudo, AUTOMÁTICO = cada função segue o seu STATUS.
      Não mexe em: loja aberta/fechada, manutenção e Natal. */
-  var MASTER_KEYS=['aviso_1','aviso_2','banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','banner_9','banner_10','banner_11','banner_12','banner_13','banner_14','banner_15','banner_16','banner_sobe','logo_categorias','promocao','mensagem_biblica','site_em_teste'];
+  var MASTER_KEYS=['aviso_1','aviso_2','banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','banner_9','banner_10','banner_11','banner_12','banner_13','banner_14','banner_15','banner_16','banner_video','banner_sobe','logo_categorias','promocao','mensagem_biblica','site_em_teste'];
   var state={},last='',busy=false,manutApplied=null,remoteStatus=null,R=document.documentElement;
 
   function plain(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toUpperCase();}
@@ -2264,7 +2264,7 @@ html.ctl-mbiblica-off #mensagemBiblicaDiaria{display:none!important}
     try{manut();}catch(e){console.error('[Controle] manutenção',e);}
     if(prev){
       if(prev.loja!==state.loja&&typeof window.updateStatus==='function'){try{window.updateStatus();}catch(e){}}
-      var bn=['banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','banner_9','banner_10','banner_11','banner_12','banner_13','banner_14','banner_15','banner_16'].some(function(k){return prev[k]!==state[k];});
+      var bn=['banners','banner_1','banner_2','banner_3','banner_4','banner_5','banner_6','banner_7','banner_8','banner_9','banner_10','banner_11','banner_12','banner_13','banner_14','banner_15','banner_16','banner_video'].some(function(k){return prev[k]!==state[k];});
       if(bn){try{document.dispatchEvent(new Event('visibilitychange'));}catch(e){}} /* os banners se atualizam na hora */
     }
   }
@@ -6618,6 +6618,9 @@ function fecharConfiguracoesBaruki(){
 </style>
 
 
+<style id="baruki-banner-video-style">
+#barukiBannerTrack .baruki-banner-slide video{display:block!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;aspect-ratio:1536/620!important;object-fit:cover!important;margin:0!important;padding:0!important;border:0!important;background:#000!important}
+</style>
 <script>
 /* Banners Baruki: atualização silenciosa em segundo plano, sem alterar o status da loja */
 (function(){
@@ -6658,19 +6661,27 @@ function fecharConfiguracoesBaruki(){
     if(m)return u.replace(/\?dl=0$/,'?raw=1');
     return u;
   }
+  /* Link de vídeo (.mp4) do banner N, vindo da planilha (aba Remoto, chave banner_N_video). */
+  function videoAt(i){
+    const v=Array.isArray(window.BarukiBannerVideos)?window.BarukiBannerVideos[i]:'';
+    const u=String(v||'').trim();
+    /* aba Controle, linha "Vídeo nos banners": DESATIVADO (ou AUTOMÁTICO fora do horário) = ignora o vídeo */
+    try{const c=window.BarukiControle;if(c&&c.has('banner_video')&&c.get('banner_video')===false)return '';}catch(e){}
+    return /^https:\/\//i.test(u)?u:'';
+  }
   function allUrls(){
     const ex=Array.isArray(window.BarukiBannerExtras)?window.BarukiBannerExtras:[];
     const out=[];
     /* Banners 1 a 8: se houver link de imagem na planilha, ele substitui a imagem fixa; se vazio, usa a fixa. */
-    /* Planilha já carregada: link vazio = banner sai; link preenchido = banner entra. Planilha ainda não carregada: usa as imagens fixas. */
-    const planilhaCarregada=Array.isArray(window.BarukiBannerExtras);
-    for(let i=0;i<8;i++)out.push(planilhaCarregada?fixUrl(ex[i]):(fixUrl(ex[i])||urls[i]));
+    for(let i=0;i<8;i++)out.push(fixUrl(ex[i])||urls[i]);
     /* Banners 9 a 16: só aparecem se houver link na planilha. */
     for(let i=8;i<16;i++)out.push(fixUrl(ex[i]));
+    /* Vídeo na planilha: toma o lugar da imagem daquele banner (link apagado = volta a imagem). */
+    for(let i=0;i<16;i++){const v=videoAt(i);if(v)out[i]=v;}
     return out;
   }
   window.BarukiRemoteStoreStatus=null;
-  let banners=[], index=0, rotateTimer=null, pollTimer=null, startX=0, busy=false, primeiraCargaFeita=false, pendente=false;
+  let vidShown=-1, banners=[], index=0, rotateTimer=null, pollTimer=null, startX=0, busy=false, primeiraCargaFeita=false, pendente=false;
   function comLimite(p,ms){return Promise.race([p,new Promise(function(r){setTimeout(function(){r(null);},ms);})]);}
 
   async function readImage(url){
@@ -6735,7 +6746,7 @@ function fecharConfiguracoesBaruki(){
         let triedPlain=false,usedSrc=fresh;
         probe.onload=async()=>{
           try{if(probe.decode)await probe.decode();}catch(e){}
-          resolve({url,hash:'opaque-'+Math.floor(Date.now()/60000),src:usedSrc,objectUrl:null});
+          resolve({url,hash:'opaque-'+Math.floor(Date.now()/600000),src:usedSrc,objectUrl:null});
         };
         probe.onerror=()=>{
           // Alguns sites recusam parâmetros extras no endereço: tenta uma vez o link exatamente como está.
@@ -6752,19 +6763,51 @@ function fecharConfiguracoesBaruki(){
     [...dotsBox.children].forEach((d,i)=>d.classList.toggle('active',i===index));
     const show=banners.length>1;
     root.querySelectorAll('.baruki-banner-arrow').forEach(el=>el.style.display=show?'grid':'none');
+    controlarVideos();
+  }
+  /* Toca o vídeo do banner que está na tela (do início, uma vez por entrada) e pausa os outros. */
+  function controlarVideos(){
+    if(!banners[index]||!banners[index].video)vidShown=-1;
+    banners.forEach((b,i)=>{
+      const v=b.element;
+      if(!b.video||!v||typeof v.play!=='function')return;
+      if(i===index){
+        v.loop=banners.length===1;
+        if(vidShown!==i){
+          vidShown=i;
+          try{v.currentTime=0;}catch(e){}
+          const pr=v.play();
+          if(pr&&pr.catch)pr.catch(()=>{if(banners.length>1)setTimeout(()=>{if(banners[index]&&banners[index].element===v)avancar();},3000);});
+        }
+      }else if(!v.paused)v.pause();
+    });
   }
   function build(){
     const current=banners[index]?.url;
+    vidShown=-1;
     track.innerHTML='';
     dotsBox.innerHTML='';
     banners.forEach((b,i)=>{
       const slide=document.createElement('div');
       slide.className='baruki-banner-slide';slide.dataset.bUrl=b.url;slide.dataset.bIdx=String(allUrls().indexOf(b.url));
-      const img=document.createElement('img');
-      img.src=b.src;
-      img.alt='Banner '+(i+1);
-      img.loading='eager';
-      img.decoding='async';
+      let img;
+      if(b.video){
+        img=document.createElement('video');
+        img.muted=true;img.defaultMuted=true;img.loop=false;img.playsInline=true;img.controls=false;
+        img.setAttribute('muted','');img.setAttribute('playsinline','');img.setAttribute('webkit-playsinline','');
+        img.preload='auto';
+        img.src=b.src;
+        /* terminou: entra o próximo banner */
+        img.addEventListener('ended',()=>{if(banners.length>1&&banners[index]&&banners[index].element===img)avancar();});
+        /* link do vídeo com erro: não trava a rotação */
+        img.addEventListener('error',()=>{if(banners.length>1)setTimeout(()=>{if(banners[index]&&banners[index].element===img)avancar();},1500);});
+      }else{
+        img=document.createElement('img');
+        img.src=b.src;
+        img.alt='Banner '+(i+1);
+        img.loading='eager';
+        img.decoding='async';
+      }
       slide.appendChild(img);
       track.appendChild(slide);
       b.element=img;
@@ -6778,9 +6821,14 @@ function fecharConfiguracoesBaruki(){
     root.style.display=banners.length?'block':'none';
     paint();restart();
   }
+  function avancar(){index=(index+1)%banners.length;paint();restart();}
   function restart(){
-    if(rotateTimer)clearInterval(rotateTimer);
-    if(banners.length>1)rotateTimer=setInterval(()=>{index=(index+1)%banners.length;paint();},5000);
+    if(rotateTimer){clearInterval(rotateTimer);clearTimeout(rotateTimer);rotateTimer=null;}
+    if(banners.length<=1)return;
+    const atual=banners[index];
+    /* vídeo: o próximo banner entra quando ele termina (limite de segurança de 3 min); imagem: 5 segundos */
+    if(atual&&atual.video){rotateTimer=setTimeout(avancar,180000);return;}
+    rotateTimer=setInterval(avancar,5000);
   }
   window.showBarukiBanner=function(n){if(!banners.length)return;index=(n+banners.length)%banners.length;paint();restart();};
   window.moveBarukiBanner=function(step){window.showBarukiBanner(index+step);};
@@ -6797,7 +6845,8 @@ function fecharConfiguracoesBaruki(){
         try{return await readImage(url);}catch(e){return null;}
       }));
       const disableP=readImage(disableBannersUrl).then(()=>true,()=>false);
-      const bannersP=Promise.all(allUrls().map(url=>!url?Promise.resolve(null):(banners.length?readBanner(url):comLimite(readBanner(url),6000))));
+      const listaUrls=allUrls();
+      const bannersP=Promise.all(listaUrls.map((url,i)=>!url?Promise.resolve(null):(url===videoAt(i)?Promise.resolve({url,hash:'video',src:url,objectUrl:null,video:true}):(banners.length?readBanner(url):comLimite(readBanner(url),6000)))));
       // STATUS: bloco original preservado integralmente, com os mesmos links,
       // leitura, prioridade e chamada de updateStatus().
       const statusResults=await statusP;
@@ -6825,7 +6874,16 @@ function fecharConfiguracoesBaruki(){
 
       // BANNERS: a cada ciclo, só permanecem os links que realmente carregam imagem.
       const results=await bannersP;
-      const valid=results.filter((item,i)=>item&&!(window.BarukiControle&&window.BarukiControle.bannerOff(i))); // planilha Controle
+      const valid=[]; // planilha Controle pode desligar banners
+      results.forEach((item,i)=>{
+        if(window.BarukiControle&&window.BarukiControle.bannerOff(i))return;
+        if(item){valid.push(item);return;}
+        /* falha momentânea ao baixar a imagem: mantém o banner que já estava na tela (evita sumir e voltar piscando) */
+        const u=listaUrls[i],antigo=u&&banners.find(b=>b.url===u);
+        if(antigo)valid.push({url:antigo.url,hash:antigo.hash,src:antigo.src,objectUrl:antigo.objectUrl});
+      });
+      /* VÍDEO ATIVO: o banner trava só no vídeo (imagens ficam fora até o link sair ou o vídeo ser desligado). */
+      if(valid.some(x=>x.video)){for(let k=valid.length-1;k>=0;k--)if(!valid[k].video)valid.splice(k,1);}
       const previous=[...banners];
       const currentUrl=previous[index]?.url||null;
       const next=[];
@@ -9115,7 +9173,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    ========================================================= */
 (function(){
   'use strict';
-  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
+  var SHEET_ID='1OXSa_BOEBj7Fx40k9Orh9R-xb0yHp7rFgJP-UpOq7Ew';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Categorias');
   var KEY='baruki_catimgs_v1';
   var store={categorias:{},cardapio:{},remoto:{}},lastSig=null,lastCsv='',busy=false;
@@ -9287,7 +9345,7 @@ body.baruki-rodape-ativo .toast{bottom:calc(145px + var(--baruki-rodape-h))}
    Se a planilha não carregar, o cardápio atual continua funcionando.
    ========================================================= */
 (function(){
-  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
+  var SHEET_ID='1OXSa_BOEBj7Fx40k9Orh9R-xb0yHp7rFgJP-UpOq7Ew';
   var SHEET_TAB='Cardápio';
   var SHEET_URL='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB);
   var CACHE_KEY='baruki_planilha_cache_v12';
@@ -9975,7 +10033,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    Se a aba não carregar, nada muda. */
 (function(){
   'use strict';
-  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
+  var SHEET_ID='1OXSa_BOEBj7Fx40k9Orh9R-xb0yHp7rFgJP-UpOq7Ew';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Pedido');
   var MAP={comer_no_local:'optComerNoLocal',retirada_balcao:'optRetiradaBalcao',entrega_floriano:'optFloriano',
            entrega_nova_floresta:'optNovaFloresta',pix:'optPix',cartao:'optCartao',dinheiro:'optDinheiro'};
@@ -10069,7 +10127,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    Se a aba não carregar ou o valor for inválido, nada muda. */
 (function(){
   'use strict';
-  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
+  var SHEET_ID='1OXSa_BOEBj7Fx40k9Orh9R-xb0yHp7rFgJP-UpOq7Ew';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Contatos');
   var last='',busy=false;
   function plain(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toUpperCase();}
@@ -10135,7 +10193,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    ========================================================= */
 (function(){
   'use strict';
-  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
+  var SHEET_ID='1OXSa_BOEBj7Fx40k9Orh9R-xb0yHp7rFgJP-UpOq7Ew';
   var root=document.documentElement;
   var S={aj:{},rem:{},bl:[],rodLink:'',cats:{},imgs:null};
   var last={};
@@ -10474,17 +10532,19 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
     /* Banners 1 a 16: banner_N_link (ou _imagem/_img/_url) = link da IMAGEM (nos banners 1 a 8, vazio = imagem fixa do HTML).
        Link ao tocar no banner = banner_N_clique (ou _destino), opcional. */
     function pk(names){for(var j=0;j<names.length;j++){var o=R[names[j]];if(o){var u=https(o.v);if(u)return {u:u,st:o.st,k:names[j]};}}return null;}
-    S.bl=[];S.bimg=[];
+    S.bl=[];S.bimg=[];S.bvid=[];
     for(var i=1;i<=16;i++){
       var p='banner_'+i;
       var im=pk([p+'_imagem',p+'_img',p+'_foto',p+'_png',p+'_url',p+'_link',p]);
       var cl=pk([p+'_clique',p+'_destino',p+'_site',p+'_link_clique']);
       var off=im&&(im.st==='DESATIVADO'||(R[p]&&R[p].st==='DESATIVADO'));
       S.bimg.push(im&&!off?im.u:'');
+      var vd=pk([p+'_video',p+'_mp4',p+'_vid']);   /* VÍDEO no banner N: link .mp4 */
+      S.bvid.push(vd&&vd.st!=='DESATIVADO'?vd.u:'');
       S.bl.push(cl?cl.u:'');
     }
-    var sigB=JSON.stringify(S.bimg);
-    if(S.bimgSig!==sigB){S.bimgSig=sigB;window.BarukiBannerExtras=S.bimg;if(typeof window.barukiRefreshBanners==='function')setTimeout(window.barukiRefreshBanners,0);}
+    var sigB=JSON.stringify([S.bimg,S.bvid]);
+    if(S.bimgSig!==sigB){S.bimgSig=sigB;window.BarukiBannerExtras=S.bimg;window.BarukiBannerVideos=S.bvid;if(typeof window.barukiRefreshBanners==='function')setTimeout(window.barukiRefreshBanners,0);}
     S.rodLink=R.banner_rodape_link?https(R.banner_rodape_link.v):'';
     if(R.banner_rodape){
       window.__barukiRodapeLink=https(R.banner_rodape.v)||'';
@@ -10744,7 +10804,7 @@ body:not(.day-theme) #detailContent #twoFlavorTotal>.total>strong{
    - Se a aba não carregar ou o vídeo falhar, nada mais no site é afetado. */
 (function(){
   'use strict';
-  var SHEET_ID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI';
+  var SHEET_ID='1OXSa_BOEBj7Fx40k9Orh9R-xb0yHp7rFgJP-UpOq7Ew';
   var URL_CSV='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent('Vídeo');
   var KEY='video_mp4',SS_KEY='baruki_video_fechado';
   var last=null,busy=false,box=null,vid=null,msg=null,shownUrl='',dismissed='';
@@ -10985,7 +11045,7 @@ html.bkfx-ban-go #barukiBanner::after{animation:bkfxSheen calc(1.6s*var(--bkfx-b
 (function(){
 'use strict';
 if(window.__bkfxLoaded)return;window.__bkfxLoaded=true;
-var SID='1IhHU3amLFmMuThQB1S0h5KZ-u_l4VtqiqB9x7nBuBbI',TAB='Animações',LS='bkfx_cfg_v1',LS_THX='bkfx_thx';
+var SID='1OXSa_BOEBj7Fx40k9Orh9R-xb0yHp7rFgJP-UpOq7Ew',TAB='Animações',LS='bkfx_cfg_v1',LS_THX='bkfx_thx';
 var D=document,R=D.documentElement;
 var RM=false;try{RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);}catch(e){}
 var KEYS=['botoes','pizza','carrinho','mascote','produto','resumo','transicao','festa','banner'];
